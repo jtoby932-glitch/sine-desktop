@@ -18,12 +18,14 @@
     saveTimer = setTimeout(() => { try { localStorage.setItem(LOG_KEY, JSON.stringify(lines)); } catch (e) {} }, 500);
     if (level === 'error' && api && api.logError) { try { api.logError(msg); } catch (e) {} }
   }
+  // Chromium's ResizeObserver note is harmless (a layout settled a frame later) and isn't worth a log line
+  const harmless = (m) => /ResizeObserver loop/.test(String(m));
   for (const level of ['warn', 'error']) {
     const orig = console[level].bind(console);
     const str = (a) => { if (a && a.stack) return a.stack; if (typeof a !== 'object') return String(a); try { return JSON.stringify(a); } catch (e) { return String(a); } };
-    console[level] = (...args) => { add(level, args.map(str).join(' ')); orig(...args); };
+    console[level] = (...args) => { const m = args.map(str).join(' '); if (!harmless(m)) add(level, m); orig(...args); };
   }
-  window.addEventListener('error', (e) => add('error', `${e.message} @ ${(e.filename || '').split('/').pop()}:${e.lineno}`));
+  window.addEventListener('error', (e) => { if (!harmless(e.message)) add('error', `${e.message} @ ${(e.filename || '').split('/').pop()}:${e.lineno}`); });
   window.addEventListener('unhandledrejection', (e) => add('error', `unhandled: ${(e.reason && (e.reason.stack || e.reason.message)) || e.reason}`));
   window.MurielLog = {
     add,

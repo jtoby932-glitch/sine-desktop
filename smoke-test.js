@@ -31,7 +31,7 @@ module.exports = async function smokeTest({ app, win, serverPort, serverToken })
     })`);
     check('page starts', ready.ok, JSON.stringify(ready));
     check('desktop layout', ready.desktop && !ready.phoneLayout);
-    const fatal = pageErrors.filter((m) => !/Failed to load resource|ERR_|net::/i.test(m));
+    const fatal = pageErrors.filter((m) => !/Failed to load resource|ERR_|net::|ResizeObserver loop/i.test(m));
     check('no errors while starting', fatal.length === 0, fatal.slice(0, 3).join(' | '));
 
     // the real internet
