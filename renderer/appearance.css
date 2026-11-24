@@ -1,0 +1,121 @@
+/* Settings → Appearance, Now Playing options. Phones only: everything here needs html.is-mobile. */
+
+/* ---------- Settings: more room once inside a page ---------- */
+html.is-mobile #view-settings:not(.settings-at-list):not(.settings-searching) .section-title,
+html.is-mobile #view-settings:not(.settings-at-list):not(.settings-searching) .settings-search-box { display: none; }
+html.is-mobile body:has(#view-settings.active) .top-nav .search-box-wrapper { display: none; }
+html.is-mobile .settings-nav-btn > span[data-sub]:not(.ripple-host) { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; column-gap: 12px; row-gap: 1px; white-space: normal; }
+html.is-mobile .settings-nav-btn > span[data-sub]:not(.ripple-host)::before { content: attr(data-sub); grid-row: 2; grid-column: 1; font-size: calc(12px * var(--font-scale, 1)); font-weight: 400; color: var(--md-sys-color-outline); }
+html.is-mobile .settings-nav-btn > span[data-sub]:not(.ripple-host)::after { grid-row: 1 / span 2; grid-column: 2; margin: 0 6px 0 0; }
+html.is-mobile body:has(#view-settings.active) .platform-switch-container { display: none; }
+.nf-retired { display: none !important; }
+.nf-off { display: none !important; }
+.nf-setting-head { display: flex; flex-direction: column; gap: 2px; margin-bottom: 8px; }
+
+/* ---------- preview and jumps ---------- */
+html.is-mobile .nf-appearance-top { position: sticky; top: -12px; z-index: 30; margin: 0 0 6px; padding: 8px; border-radius: calc(var(--md-shape-corner-l, 16px) + 6px); background: var(--nf-solid, #121114); box-shadow: 0 6px 18px rgba(0, 0, 0, .22); }
+.nf-preview { display: flex; align-items: center; gap: 12px; padding: 8px; border-radius: var(--md-shape-corner-l, 16px); background: color-mix(in srgb, var(--md-sys-color-primary) 13%, var(--nf-solid, #121114)); }
+.nf-pv-art { flex: none; width: 54px; height: 54px; background: linear-gradient(135deg, var(--md-sys-color-primary), color-mix(in srgb, var(--md-sys-color-primary) 28%, #000)) center / cover; border-radius: var(--md-shape-corner-m, 12px); transition: border-radius .25s; }
+.nf-pv-art.has-art { background-size: cover; background-position: center; }
+body[data-np-art="square"] .nf-pv-art { border-radius: 2px; }
+body[data-np-art="circle"] .nf-pv-art, body[data-np-art="vinyl"] .nf-pv-art { border-radius: 50%; }
+.nf-pv-text { flex: 1 1 auto; min-width: 0; }
+.nf-pv-title { font-size: calc(14px * var(--font-scale, 1)); font-weight: 600; color: var(--md-sys-color-on-surface); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.nf-pv-artist { font-size: calc(12px * var(--font-scale, 1)); color: var(--md-sys-color-on-surface-variant); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.nf-pv-wave { display: flex; align-items: center; gap: 2px; height: 16px; margin-top: 5px; }
+.nf-pv-wave i { flex: 1 1 0; min-width: 1px; border-radius: 2px; background: color-mix(in srgb, var(--md-sys-color-on-surface) 22%, transparent); }
+.nf-pv-wave i.on { background: var(--md-sys-color-primary); }
+body[data-np-seek="line"] .nf-pv-wave i { height: 3px !important; border-radius: 0; }
+body[data-np-seek="line"] .nf-pv-wave { gap: 0; }
+body[data-np-seek="sine"] .nf-pv-wave i { display: none; }
+body[data-np-seek="sine"] .nf-pv-wave { background: currentColor; -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='12'%3E%3Cpath d='M0 6 Q6 -4 12 6 T24 6' fill='none' stroke='%23000' stroke-width='2.4'/%3E%3C/svg%3E") repeat-x center; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='12'%3E%3Cpath d='M0 6 Q6 -4 12 6 T24 6' fill='none' stroke='%23000' stroke-width='2.4'/%3E%3C/svg%3E") repeat-x center; }
+.nf-pv-play { flex: none; display: grid; place-items: center; width: 42px; height: 42px; border-radius: 50%; background: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary); }
+.nf-appearance-top .nf-jump { position: static; margin: 8px 0 0; padding: 0; background: none; box-shadow: none; overflow-x: auto; scrollbar-width: none; }
+.nf-appearance-top .nf-jump::-webkit-scrollbar { display: none; }
+.nf-appearance-top .nf-jump button { flex: none; }
+
+/* ---------- looks ---------- */
+.nf-looks { display: flex; gap: 10px; overflow-x: auto; margin: 0 -14px; padding: 8px 14px 6px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.nf-looks::-webkit-scrollbar { display: none; }
+.nf-look { position: relative; flex: none; width: 78px; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 0; background: none; border: 0; color: var(--md-sys-color-on-surface-variant); font-size: calc(12px * var(--font-scale, 1)); }
+.nf-look-art { display: grid; place-items: center; width: 78px; height: 78px; border-radius: 19px; box-shadow: 0 0 0 1px color-mix(in srgb, var(--md-sys-color-on-surface) 12%, transparent); transition: box-shadow .18s, transform .18s; }
+.nf-look-art svg { width: 38px; height: 46px; }
+.nf-look:active .nf-look-art { transform: scale(.94); }
+.nf-look.active { color: var(--md-sys-color-on-surface); font-weight: 600; }
+.nf-look.active .nf-look-art { box-shadow: 0 0 0 2px var(--nf-solid, #121114), 0 0 0 4px var(--md-sys-color-primary); }
+.nf-look-name { max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.nf-look-del { display: none; position: absolute; top: -5px; right: -3px; width: 24px; height: 24px; border-radius: 50%; place-items: center; font-size: 15px; line-height: 1; background: var(--md-sys-color-error, #f2b8b5); color: var(--md-sys-color-on-error, #601410); }
+.nf-editing .nf-look-del { display: grid; }
+.nf-look-save { display: flex; gap: 8px; margin-top: 10px; align-items: center; }
+.nf-look-save .tempo-preset-name { flex: 1; min-width: 0; padding: 8px 14px; border-radius: var(--md-shape-corner-full, 999px); border: 1px solid var(--md-sys-color-outline-variant); background: transparent; color: var(--md-sys-color-on-surface); font-size: 16px; }
+.nf-look-save .chip-btn { flex: none; padding: 8px 14px; }
+.nf-look-save [hidden] { display: none; }
+.nf-appearance-reset { display: block; margin: 18px auto 24px; padding: 9px 16px; }
+
+/* ---------- Now Playing: artwork ---------- */
+html.is-mobile body[data-np-art="square"] .right-panel-cover,
+html.is-mobile body[data-np-art="square"] .right-panel-cover-fallback,
+html.is-mobile body[data-np-art="square"] .cover-container { border-radius: 3px !important; }
+html.is-mobile body:is([data-np-art="circle"], [data-np-art="vinyl"]) .right-panel-cover,
+html.is-mobile body:is([data-np-art="circle"], [data-np-art="vinyl"]) .right-panel-cover-fallback,
+html.is-mobile body:is([data-np-art="circle"], [data-np-art="vinyl"]) .cover-container { border-radius: 50% !important; }
+html.is-mobile body:is([data-np-art="circle"], [data-np-art="vinyl"]) .cover-container { overflow: hidden; }
+/* a record: grooves, a label hole, turning while the song plays */
+html.is-mobile body[data-np-art="vinyl"] .cover-container::after {
+  content: ""; position: absolute; inset: 0; z-index: 2; pointer-events: none; border-radius: 50%;
+  background:
+    radial-gradient(circle, var(--md-sys-color-surface) 0 3.2%, rgba(0,0,0,.72) 3.4% 4.2%, transparent 4.4%),
+    repeating-radial-gradient(circle, rgba(0,0,0,.16) 0 1px, transparent 1px 4px);
+  -webkit-mask: radial-gradient(circle, #000 0 4.5%, transparent 4.6% 33%, #000 33.2%); mask: radial-gradient(circle, #000 0 4.5%, transparent 4.6% 33%, #000 33.2%);
+}
+html.is-mobile body[data-np-art="vinyl"] .right-panel-cover, html.is-mobile body[data-np-art="vinyl"] .right-panel-cover-fallback { animation: nf-spin 7s linear infinite; animation-play-state: paused; }
+html.is-mobile body[data-np-art="vinyl"].np-open.is-playing .right-panel-cover, html.is-mobile body[data-np-art="vinyl"].np-open.is-playing .right-panel-cover-fallback { animation-play-state: running; }
+@keyframes nf-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { html.is-mobile body[data-np-art="vinyl"] .right-panel-cover, html.is-mobile body[data-np-art="vinyl"] .right-panel-cover-fallback { animation: none; } }
+
+/* ---------- Now Playing: background ---------- */
+.nf-np-backdrop { display: none; }
+html.is-mobile #right-panel > .nf-np-backdrop { position: absolute !important; inset: -60px !important; z-index: 0 !important; pointer-events: none; }
+html.is-mobile body[data-np-bg="cover"] #right-panel > .nf-np-backdrop.has-art { display: block; background-size: cover; background-position: center; filter: blur(46px) saturate(1.35); }
+html.is-mobile body[data-np-bg="cover"] #right-panel::after { content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none; background: linear-gradient(to bottom, color-mix(in srgb, var(--nf-solid, #121114) 58%, transparent), color-mix(in srgb, var(--nf-solid, #121114) 74%, transparent) 62%, color-mix(in srgb, var(--nf-solid, #121114) 92%, transparent)); }
+html.is-mobile body[data-np-bg="cover"] #right-panel { overflow: hidden; }
+html.is-mobile body[data-np-bg="plain"] #right-panel { background: var(--md-sys-color-surface) !important; }
+html.is-mobile body[data-np-bg="cover"].np-open .playbar, html.is-mobile body[data-np-bg="plain"].np-open .playbar { background: transparent !important; }
+
+/* ---------- Now Playing: seek bar ---------- */
+html.is-mobile body:is([data-np-seek="line"], [data-np-seek="sine"]).np-open .scrubber-bar-wrapper.nf-has-wave .nf-wave { display: none; }
+html.is-mobile body:is([data-np-seek="line"], [data-np-seek="sine"]).np-open .scrubber-bar-wrapper.nf-has-wave #scrubber-track { display: block; }
+
+/* ---------- Now Playing: title ---------- */
+html.is-mobile body[data-np-align="left"] .right-panel-meta { text-align: left; align-items: stretch; }
+html.is-mobile body[data-np-align="left"] .right-panel-title-row { justify-content: space-between !important; }
+html.is-mobile body[data-np-align="left"] .right-panel-title, html.is-mobile body[data-np-align="left"] .right-panel-artist { text-align: left; }
+html.is-mobile body[data-np-align="center"] .right-panel-meta { text-align: center; }
+html.is-mobile body[data-np-align="center"] .right-panel-title-row { position: relative; padding: 0 44px; }
+html.is-mobile body[data-np-align="center"] #np-like { position: absolute; right: 0; top: 50%; transform: translateY(-50%); }
+html.is-mobile body[data-np-align="center"] .right-panel-title, html.is-mobile body[data-np-align="center"] .right-panel-artist { text-align: center; }
+
+/* ---------- Now Playing: tidier top ---------- */
+html.is-mobile #right-panel .drawer-tabs { display: flex; align-items: center; }
+html.is-mobile #right-panel .drawer-tabs #btn-close-right-panel { order: 9; margin-left: 4px; flex: none; width: 34px !important; height: 34px !important; min-height: 0; padding: 0; align-self: center; }
+html.is-mobile #right-panel .drawer-tabs .nf-drive-btn, html.is-mobile #right-panel .drawer-tabs [aria-label="Drive mode"] { order: 8; margin-left: auto; }
+/* with no lyrics there's nothing to sync, translate or show fullscreen */
+html.is-mobile #right-panel.lyrics-empty #btn-lyrics-mode,
+html.is-mobile #right-panel.lyrics-empty #btn-sync-lyrics,
+html.is-mobile #right-panel.lyrics-empty #btn-translate-lyrics,
+html.is-mobile #right-panel.lyrics-empty #btn-tv-karaoke { display: none !important; }
+html.is-mobile #right-panel.lyrics-empty .right-panel-header { min-height: 0 !important; height: auto !important; margin: 0 0 4px !important; padding: 0 !important; justify-content: flex-end !important; }
+html.is-mobile #right-panel.lyrics-empty .lyrics-header-actions { background: none !important; padding: 0 !important; }
+
+/* ---------- dialogs: phones have no blur, so what's behind them must not show through ---------- */
+html.is-mobile .dialog-card { background: var(--nf-solid, #121114) !important; }
+
+/* ---------- Spotify search setup ---------- */
+#setting-spotify-keys { display: flex; flex-direction: column; gap: 10px; }
+#setting-spotify-keys .nf-setting-head { margin-bottom: 0; }
+.nf-steps { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; font-size: calc(13px * var(--font-scale, 1)); line-height: 1.4; color: var(--md-sys-color-on-surface-variant); }
+.nf-steps a { color: var(--md-sys-color-primary); }
+.nf-key { width: 100%; box-sizing: border-box; padding: 9px 14px; border-radius: var(--md-shape-corner-full, 999px); border: 1px solid var(--md-sys-color-outline-variant); background: transparent; color: var(--md-sys-color-on-surface); font-size: 16px; }
+#setting-spotify-keys .pfx-profile-actions { margin-top: 0; }
+.nf-search-problem { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; margin: 12px 4px; padding: 16px; border-radius: var(--md-shape-corner-l, 16px); background: color-mix(in srgb, var(--md-sys-color-primary) 11%, var(--nf-solid, #121114)); }
+.nf-search-problem-title { font-size: calc(15px * var(--font-scale, 1)); font-weight: 600; color: var(--md-sys-color-on-surface); }

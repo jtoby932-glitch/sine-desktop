@@ -1,0 +1,54 @@
+name: Build Sine for Windows
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install
+        run: npm install --no-audit --no-fund
+
+      - name: Songs from the real internet, in plain Node (report only)
+        run: node test/live-check.js
+        continue-on-error: true
+
+      - name: Build the installer
+        run: npx electron-builder --win nsis --x64 --publish never
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+
+      - name: Start the built app and check it (smoke test)
+        shell: pwsh
+        run: |
+          $env:SINE_SMOKE_OUT = "$PWD\smoke.json"
+          $env:SINE_SMOKE_DIR = "$PWD\smoke-user"
+          $p = Start-Process -FilePath "dist\win-unpacked\Sine.exe" -ArgumentList "--smoke-test" -PassThru -Wait
+          if (Test-Path smoke.json) { Get-Content smoke.json } else { Write-Host "no report written" }
+          if (Test-Path "smoke-user\logs\sine.log") { Get-Content "smoke-user\logs\sine.log" -Tail 40 }
+          if ($p.ExitCode -ne 0) { Write-Host "smoke test failed: $($p.ExitCode)"; exit 1 }
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Sine-Setup
+          path: dist/Sine-Setup-*.exe
+          if-no-files-found: error
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: smoke-report
+          path: |
+            smoke.json
+            smoke-user/logs/
+          if-no-files-found: ignore

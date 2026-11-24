@@ -1,0 +1,52 @@
+{
+  "name": "sine",
+  "productName": "Sine",
+  "version": "2.10.4",
+  "description": "Sine music player for Windows",
+  "main": "main.js",
+  "author": "Toby",
+  "license": "UNLICENSED",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win nsis --x64 --publish never"
+  },
+  "dependencies": {
+    "youtubei.js": "^18.1.0"
+  },
+  "devDependencies": {
+    "electron": "^39.0.0",
+    "electron-builder": "^26.0.0"
+  },
+  "build": {
+    "appId": "io.github.sine.desktop",
+    "productName": "Sine",
+    "copyright": "Sine",
+    "directories": { "output": "dist", "buildResources": "build" },
+    "files": [
+      "main.js",
+      "preload.js",
+      "smoke-test.js",
+      "server/**",
+      "renderer/**",
+      "build/icon.png",
+      "package.json"
+    ],
+    "asar": true,
+    "win": {
+      "target": [{ "target": "nsis", "arch": ["x64"] }],
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Sine",
+      "artifactName": "Sine-Setup-${version}.exe",
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico",
+      "runAfterFinish": true
+    }
+  }
+}

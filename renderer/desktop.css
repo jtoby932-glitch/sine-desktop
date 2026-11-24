@@ -1,0 +1,6 @@
+/* Sine for PC: the desktop layout's own touches. */
+
+/* the title bar: Sine's wave and name, like the top of the iPhone app */
+html.is-desktop .app-logo { gap: 9px; }
+html.is-desktop .app-logo #titlebar-logo-dot { display: block; width: 30px; height: 18px; flex: none; }
+html.is-desktop body:not(.mini) .titlebar .logo-text { display: inline; font-size: 15px; font-weight: 600; letter-spacing: 0.01em; }

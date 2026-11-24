@@ -1,0 +1,389 @@
+/* Equalizer, sound presets, upscaler and effects in Audio -> Speed & Pitch (phone-fx.js) */
+.pfx-card .setting-item-top { align-items: center; }
+.pfx-title { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.pfx-hint {
+  font-size: calc(12px * var(--font-scale, 1));
+  line-height: 1.35;
+  color: var(--md-sys-color-outline);
+}
+
+/* faders */
+.pfx-faders {
+  position: relative;
+  touch-action: none;
+  display: grid;
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+  gap: 0;
+  margin-top: 12px;
+  transition: opacity 0.2s ease;
+}
+.pfx-fader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  outline: none;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.pfx-fader.dragging { cursor: grabbing; }
+.pfx-fader-val,
+.pfx-fader-freq {
+  font-size: calc(11px * var(--font-scale, 1));
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+.pfx-fader-val { font-weight: 500; color: var(--md-sys-color-primary); }
+.pfx-fader-freq { color: var(--md-sys-color-on-surface-variant); }
+.pfx-fader-track {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 196px;
+  background: linear-gradient(var(--md-sys-color-outline-variant), var(--md-sys-color-outline-variant)) center / 100% 1px no-repeat;
+}
+.pfx-fader-track::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 10px;
+  margin-left: -5px;
+  border-radius: 5px;
+  background: var(--md-sys-color-secondary-container);
+}
+.pfx-fader-fill {
+  position: absolute;
+  left: 50%;
+  width: 10px;
+  margin-left: -5px;
+  height: calc(max(var(--v, 0), var(--v, 0) * -1) * 50%);
+  bottom: calc(50% - max(0%, var(--v, 0) * -50%));
+  border-radius: 7px;
+  background: var(--md-sys-color-primary);
+  transition: height 0.28s cubic-bezier(0.2, 0, 0, 1), bottom 0.28s cubic-bezier(0.2, 0, 0, 1);
+}
+.pfx-fader-thumb {
+  position: absolute;
+  left: 50%;
+  top: calc(50% - var(--v, 0) * 50%);
+  width: 20px;
+  height: 10px;
+  margin: -5px 0 0 -10px;
+  border-radius: 5px;
+  background: var(--md-sys-color-primary);
+  box-shadow: 0 0 0 2px var(--md-sys-color-surface-container-highest-solid, var(--md-sys-color-surface-container-high));
+  transition: top 0.28s cubic-bezier(0.2, 0, 0, 1), transform 0.15s ease;
+}
+.pfx-fader.dragging .pfx-fader-fill,
+.pfx-fader.dragging .pfx-fader-thumb { transition: none; }
+.pfx-fader.dragging .pfx-fader-thumb,
+.pfx-fader:focus-visible .pfx-fader-thumb { transform: scale(1.25); }
+.pfx-fader.dragging .pfx-fader-val { transform: scale(1.35); transform-origin: center bottom; }
+.pfx-fader-val { transition: transform 0.12s ease; }
+.pfx-card.is-off .pfx-faders { opacity: 0.45; }
+
+/* upscaler profiles */
+.pfx-profiles {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  margin-top: 12px;
+  transition: opacity 0.2s ease;
+}
+.pfx-profile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 14px;
+  background: transparent;
+  color: var(--md-sys-color-on-surface);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.pfx-profile-name { font-size: calc(13px * var(--font-scale, 1)); font-weight: 500; line-height: 1.25; }
+.pfx-profile-desc { display: block; margin-top: 2px; font-size: calc(11px * var(--font-scale, 1)); line-height: 1.2; opacity: 0.72; }
+.pfx-profile.active {
+  background: var(--md-sys-color-primary);
+  border-color: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
+}
+.pfx-card.is-off .pfx-profiles { opacity: 0.45; }
+.pfx-card.is-off .pfx-profile.active {
+  background: var(--md-sys-color-secondary-container);
+  border-color: var(--md-sys-color-secondary-container);
+  color: var(--md-sys-color-on-secondary-container);
+}
+.pfx-up-detail { display: block; margin-top: 10px; }
+.pfx-up-detail[hidden] { display: none; }
+.pfx-strength { margin-top: 10px; }
+
+/* Riff's controls where they sit on phones */
+#pfx-sound-presets .presets-chips-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  max-height: none;
+  height: auto;
+  overflow: visible;
+  margin-top: 12px;
+  padding: 0;
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+#pfx-sound-presets .preset-chip { height: auto; min-height: 38px; padding: 8px 15px; font-size: calc(14px * var(--font-scale, 1)); background: color-mix(in srgb, var(--md-sys-color-on-surface) 9%, transparent); color: var(--md-sys-color-on-surface); }
+#pfx-sound-presets .preset-chip.active { background: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary); font-weight: 500; }
+#pfx-sound-presets .preset-chip:has(.preset-actions) { padding-right: 15px; }
+#pfx-sound-presets .preset-actions { display: none; }
+.pfx-editing #pfx-sound-presets .preset-chip:has(.preset-actions) { padding-right: 5px; }
+.pfx-editing #pfx-sound-presets .preset-actions { display: inline-flex; }
+#pfx-sound-presets .preset-btn-action { width: 30px; height: 30px; color: inherit; }
+#pfx-sound-presets .preset-group-label { flex-basis: 100%; margin-top: 6px; font-size: calc(12px * var(--font-scale, 1)); color: var(--md-sys-color-outline); }
+.pfx-profile-actions { display: flex; gap: 8px; margin-top: 12px; }
+.pfx-profile-actions [hidden] { display: none; }
+.pfx-eq-rows { margin-top: 10px; }
+.pfx-eq-rows .eq-row { padding: 6px 0; background: none; border-radius: 0; }
+#pfx-save-preset { flex: none; padding: 8px 14px; font-size: calc(13px * var(--font-scale, 1)); }
+
+/* status */
+.pfx-status-row { display: flex; gap: 8px; align-items: stretch; margin: 10px 0 6px; }
+.pfx-compare[hidden] { display: none; }
+.pfx-compare {
+  flex: none;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 14px;
+  background: var(--md-sys-color-secondary-container);
+  color: var(--md-sys-color-on-secondary-container);
+  font: inherit;
+  font-size: calc(12px * var(--font-scale, 1));
+  font-weight: 600;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  max-width: 96px;
+  line-height: 1.2;
+  transition: transform 0.12s ease, background 0.12s ease;
+}
+.pfx-compare.held { background: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary); transform: scale(0.96); }
+.pfx-status {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 14px;
+  font-size: calc(13px * var(--font-scale, 1));
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+  background: var(--md-sys-color-surface-container-high);
+  color: var(--md-sys-color-on-surface-variant);
+}
+.pfx-status[data-kind="working"] { color: var(--md-sys-color-primary); }
+.pfx-status[data-kind="done"] { background: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container); }
+.pfx-status[data-kind="failed"],
+.pfx-status[data-kind="too-long"],
+.pfx-status[data-kind="unsupported"] { background: var(--md-sys-color-error-container, #601410); color: var(--md-sys-color-on-error-container, #f9dedc); }
+
+/* every slider on phones: the whole width answers a finger (touch-sliders.js), and the row is tall enough to hit */
+html.is-mobile .sl { touch-action: pan-y; }
+html.is-mobile .sl::before { content: ''; position: absolute; left: -8px; right: -8px; top: -9px; bottom: -9px; }
+html.is-mobile .sl input[type="range"] { pointer-events: none; }
+html.is-mobile .sl input[type="range"]::-webkit-slider-thumb { width: 8px; }
+html.is-mobile .sl.sl-pressed .sl-active { filter: brightness(1.12); }
+html.is-mobile .sl.sl-pressed input[type="range"]::-webkit-slider-thumb { width: 12px; }
+html.is-mobile .hue-seg { touch-action: pan-y; }
+
+/* Audio panel shortcuts */
+.pfx-jump {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  gap: 4px;
+  margin: 0 -4px 8px;
+  padding: 6px 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  background: var(--md-sys-color-surface-container-highest-solid, #1f1f22);
+  border-radius: 14px;
+}
+.pfx-jump::-webkit-scrollbar { display: none; }
+.pfx-jump button {
+  flex: 1 0 auto;
+  padding: 7px 10px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--md-sys-color-on-surface-variant);
+  font: inherit;
+  font-size: calc(12px * var(--font-scale, 1));
+  font-weight: 500;
+  transition: background 0.2s ease, color 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.pfx-jump button.active { background: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary); }
+.pfx-effects-label { margin: 14px 12px 2px; font-size: calc(14px * var(--font-scale, 1)); font-weight: 500; color: var(--md-sys-color-on-surface); scroll-margin-top: 60px; }
+
+/* the brand at the top of the phone screen */
+html.is-mobile .app-logo { display: inline-flex; align-items: center; gap: 7px; }
+html.is-mobile .app-logo .logo-text { display: inline !important; font-size: calc(15px * var(--font-scale, 1)); font-weight: 600; letter-spacing: 0.01em; }
+html.is-mobile .app-logo .logo-star { width: 18px; height: 18px; fill: currentColor; }
+html.is-mobile .app-logo .logo-star * { fill: currentColor; animation: none; opacity: 1; }
+
+/* Now Playing: what's shaping the sound */
+.nf-sound-badge {
+  display: block;
+  max-width: 100%;
+  margin: 8px auto 0;
+  padding: 5px 12px;
+  border: none;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--md-sys-color-on-surface) 10%, transparent);
+  color: var(--md-sys-color-on-surface-variant);
+  font: inherit;
+  font-size: calc(11.5px * var(--font-scale, 1));
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  -webkit-tap-highlight-color: transparent;
+}
+.nf-sound-badge[hidden] { display: none; }
+.nf-sound-badge.is-working { animation: nf-pulse 1.1s ease-in-out infinite; }
+@keyframes nf-pulse { 50% { opacity: 0.55; } }
+
+/* swipes */
+.nf-swiping { transition: none !important; }
+.right-panel-cover-wrapper { transition: transform 0.28s cubic-bezier(0.2, 0, 0, 1); touch-action: pan-y; position: relative; }
+html.is-mobile #playbar { touch-action: pan-y; }
+.nf-heart-pop { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; color: #fff; filter: drop-shadow(0 4px 18px rgba(0,0,0,.45)); animation: nf-heart 0.7s cubic-bezier(0.2, 0, 0, 1) forwards; }
+.nf-heart-pop svg { width: 38%; height: 38%; }
+@keyframes nf-heart { 0% { transform: scale(0.4); opacity: 0; } 25% { transform: scale(1.1); opacity: 1; } 60% { transform: scale(1); opacity: 1; } 100% { transform: scale(1.15); opacity: 0; } }
+html.is-mobile .track-row { touch-action: pan-y; position: relative; transition: transform 0.22s cubic-bezier(0.2, 0, 0, 1); }
+html.is-mobile .track-row.nf-row-swiping { transition: none; z-index: 2; }
+html.is-mobile .track-row[data-nf-swipe]::before {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  width: 110px;
+  font-size: calc(12px * var(--font-scale, 1));
+  font-weight: 600;
+  color: var(--md-sys-color-on-surface-variant);
+  transition: color 0.12s ease;
+}
+html.is-mobile .track-row[data-nf-swipe="next"]::before { content: 'Play next'; right: 100%; justify-content: center; }
+html.is-mobile .track-row[data-nf-swipe="like"]::before { content: 'Like'; left: 100%; justify-content: center; }
+html.is-mobile .track-row.nf-row-armed::before { color: var(--md-sys-color-primary); }
+
+.pfx-sub-row { margin-top: 14px; }
+
+/* Now Playing: the song's shape as the seek bar */
+.nf-wave { display: none; width: 100%; height: 44px; touch-action: none; flex: 1 1 auto; min-width: 0; cursor: pointer; }
+html.is-mobile body.np-open .scrubber-bar-wrapper.nf-has-wave .nf-wave { display: block; }
+html.is-mobile body.np-open .scrubber-bar-wrapper.nf-has-wave #scrubber-track { display: none; }
+
+/* the equalizer's curve runs behind nothing and through everything: it never takes a touch */
+.pfx-curve { position: absolute; left: 0; width: 100%; pointer-events: none; grid-column: 1 / -1; }
+html.is-mobile .audio-panel[data-audio-panel="tempo"] { padding-bottom: 340px; }
+
+/* Now Playing: up next */
+.nf-up-next {
+  display: block;
+  max-width: 100%;
+  margin: 6px auto 0;
+  padding: 2px 8px;
+  border: none;
+  background: none;
+  color: var(--md-sys-color-outline);
+  font: inherit;
+  font-size: calc(11.5px * var(--font-scale, 1));
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  -webkit-tap-highlight-color: transparent;
+}
+.nf-up-next[hidden] { display: none; }
+
+/* Home: your genres */
+.nf-genres { margin: 4px 0 20px; }
+.nf-genres[hidden] { display: none; }
+.nf-genre-row { display: flex; gap: 8px; overflow-x: auto; padding: 2px 0 6px; scrollbar-width: none; }
+.nf-genre-row::-webkit-scrollbar { display: none; }
+.nf-genre {
+  flex: none;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 14px;
+  background: var(--md-sys-color-secondary-container);
+  color: var(--md-sys-color-on-secondary-container);
+  font: inherit;
+  font-size: calc(13px * var(--font-scale, 1));
+  font-weight: 500;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* first launch */
+.nf-welcome { position: fixed; inset: 0; z-index: 100000; display: grid; place-items: center; padding: 16px; background: rgba(5, 4, 15, 0.62); animation: nf-fade 0.22s ease; }
+@keyframes nf-fade { from { opacity: 0; } }
+.nf-welcome-card { width: min(100%, 380px); max-height: calc(100vh - 48px); overflow-y: auto; box-sizing: border-box; padding: 22px 20px 18px; border-radius: 26px; background: var(--md-sys-color-surface-container-highest-solid, #1f1f26); color: var(--md-sys-color-on-surface); text-align: center; }
+.nf-welcome-icon { width: 64px; height: 64px; border-radius: 15px; display: block; margin: 0 auto 10px; }
+.nf-welcome-card h2 { margin: 0 0 12px; font-size: calc(19px * var(--font-scale, 1)); font-weight: 600; }
+.nf-welcome-card ul { margin: 0 0 16px; padding: 0; list-style: none; text-align: left; display: grid; gap: 10px; font-size: calc(13.5px * var(--font-scale, 1)); line-height: 1.4; color: var(--md-sys-color-on-surface-variant); }
+.nf-welcome-card b { color: var(--md-sys-color-on-surface); font-weight: 600; }
+.nf-welcome-ok { width: 100%; padding: 13px; border: none; border-radius: 16px; background: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary); font: inherit; font-weight: 600; font-size: calc(14px * var(--font-scale, 1)); }
+#nf-show-welcome { margin: 10px auto; display: block; }
+
+/* a finger needs more than the drawing */
+html.is-mobile .effect-switch-btn::after { content: ''; position: absolute; inset: -11px -6px; }
+html.is-mobile .theme-mode-btn { min-height: 36px; }
+html.is-mobile #btn-close-right-panel { min-width: 40px; min-height: 40px; }
+html.is-mobile #btn-lyrics-mode { min-height: 36px; }
+html.is-mobile .search-icon-btn { min-height: 34px; }
+html.is-mobile .nf-up-next { padding: 8px; margin-top: 0; }
+html.is-mobile .track-row:active { background: color-mix(in srgb, var(--md-sys-color-on-surface) 8%, transparent); }
+
+/* undo */
+.nf-snack { position: fixed; left: 12px; right: 12px; bottom: calc(150px + env(safe-area-inset-bottom)); z-index: 99000; display: flex; align-items: center; gap: 10px; padding: 12px 8px 12px 16px; border-radius: 16px; background: var(--md-sys-color-surface-container-highest-solid, #2a2a30); color: var(--md-sys-color-on-surface); font-size: calc(13px * var(--font-scale, 1)); box-shadow: 0 8px 24px rgba(0,0,0,.4); opacity: 0; transform: translateY(10px); pointer-events: none; transition: opacity .18s ease, transform .18s ease; }
+.nf-snack.show { opacity: 1; transform: none; pointer-events: auto; }
+.nf-snack-text { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.nf-snack-undo { flex: none; padding: 8px 12px; border: none; border-radius: 10px; background: none; color: var(--md-sys-color-primary); font: inherit; font-weight: 700; }
+
+/* Drive mode */
+.nf-drive-open { margin-left: auto; margin-right: 44px; padding: 6px 12px; border: none; border-radius: 999px; background: none; color: var(--md-sys-color-on-surface-variant); font: inherit; font-size: calc(12px * var(--font-scale, 1)); font-weight: 500; }
+.nf-drive { position: fixed; inset: 0; z-index: 99500; display: flex; flex-direction: column; padding: calc(14px + env(safe-area-inset-top)) 16px calc(20px + env(safe-area-inset-bottom)); box-sizing: border-box; background: #09081a; color: #fff; }
+.nf-drive-close { align-self: flex-end; padding: 12px 18px; border: none; border-radius: 14px; background: rgba(255,255,255,.1); color: #fff; font: inherit; font-size: 15px; font-weight: 600; }
+.nf-drive-info { flex: 1; display: flex; flex-direction: column; justify-content: center; text-align: center; min-height: 0; gap: 10px; touch-action: pan-y; }
+.nf-drive-title { font-size: clamp(28px, 9vw, 46px); font-weight: 700; line-height: 1.12; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
+.nf-drive-artist { font-size: clamp(18px, 5.5vw, 26px); color: rgba(255,255,255,.7); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.nf-drive-bar { height: 6px; margin-top: 14px; border-radius: 3px; background: rgba(255,255,255,.15); overflow: hidden; }
+.nf-drive-bar i { display: block; height: 100%; background: var(--md-sys-color-primary, #b69df8); }
+.nf-drive-controls { display: grid; grid-template-columns: 1fr 1.4fr 1fr; gap: 10px; }
+.nf-drive-controls button { min-height: 112px; border: none; border-radius: 22px; background: rgba(255,255,255,.1); color: #fff; font: inherit; font-size: 20px; font-weight: 700; }
+.nf-drive-controls .nf-drive-play { background: var(--md-sys-color-primary, #b69df8); color: #120e2a; font-size: 24px; }
+
+.pfx-tunes { margin-top: 10px; }
+.pfx-tunes[hidden], .pfx-strength[hidden] { display: none; }
+.pfx-tune + .pfx-tune { margin-top: 12px; }
+
+.pfx-source { margin: 0 0 8px; font-size: calc(12px * var(--font-scale, 1)); color: var(--md-sys-color-outline); }
+.pfx-source[hidden] { display: none; }
+#setting-quality { display: flex; flex-direction: column; gap: 10px; }
+#setting-quality .pfx-hint[hidden] { display: none; }
+#quality-now { color: var(--md-sys-color-on-surface); }
+
+.pfx-profiles-head { grid-column: 1 / -1; margin-top: 8px; font-size: calc(13px * var(--font-scale, 1)); font-weight: 600; opacity: .8; }

@@ -1,0 +1,189 @@
+/* Nocturne: styles for extras.js */
+
+/* --- settings rows --- */
+.nf-row-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1 1 auto; }
+.nf-toggle-row .setting-item-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.nf-toggle-row[hidden] { display: none !important; }
+.nf-code { display: block; margin: 8px 0; padding: 8px 10px; border-radius: 10px; font: 500 calc(13px * var(--font-scale, 1)) ui-monospace, Menlo, monospace; color: var(--md-sys-color-on-surface); background: var(--md-sys-color-surface-container-high); user-select: all; -webkit-user-select: all; word-break: break-all; }
+.nf-level-target { margin-top: 10px; }
+.nf-level-target[hidden] { display: none; }
+.nf-bass-enh { display: flex; flex-direction: column; gap: 6px; margin: 4px 0 12px; }
+
+/* --- mini player: status and lyric line --- */
+.track-meta.nf-sub-on #playbar-artist { display: none !important; }
+.nf-mini-sub { display: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; max-width: 100%; }
+.track-meta.nf-sub-on .nf-mini-sub { display: block; }
+.nf-mini-sub.is-lyric { color: var(--md-sys-color-primary); }
+.nf-mini-sub.in { animation: nf-sub-in .28s ease-out; }
+@keyframes nf-sub-in { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: none; } }
+
+/* --- artwork moving to and from Now Playing --- */
+.nf-fly { position: fixed; z-index: 2147482000; object-fit: cover; pointer-events: none; transform-origin: 0 0; will-change: transform; box-shadow: 0 10px 34px rgba(0, 0, 0, .35); }
+body.nf-flying #right-panel-cover,
+body.nf-flying #playbar-artwork { opacity: 0 !important; }
+
+/* --- a new song: the old artwork fades away over the new one, the title slides in --- */
+.nf-art-ghost { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; animation: nf-ghost .42s ease-out forwards; }
+@keyframes nf-ghost { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(1.03); } }
+.nf-title-in { animation: nf-title-in .34s cubic-bezier(.2, .8, .2, 1); }
+@keyframes nf-title-in { from { opacity: 0; transform: translateX(14px); } to { opacity: 1; transform: none; } }
+
+/* --- the logo: a sine wave with rounded ends, drawn by setupLogoWave --- */
+html.is-mobile .app-logo #titlebar-logo-dot { display: block; width: 30px; height: 18px; flex: none; }
+
+/* --- smoother word-by-word lyrics: colour only, nothing moves or changes width --- */
+html.is-mobile #right-panel .lyric-line .lyric-word { transition: color .24s linear; font-weight: inherit !important; transform: none !important; }
+
+/* --- Home order --- */
+#discover-empty.nf-home-ordered:not(.hidden) { display: flex; flex-direction: column; }
+#discover-empty.nf-home-ordered > * { min-width: 0; }
+.nf-order-list { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.nf-order-list li { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 6px 10px 14px; border-radius: 12px; background: var(--md-sys-color-surface-container-high); font-size: calc(14px * var(--font-scale, 1)); color: var(--md-sys-color-on-surface); transition: box-shadow .15s; }
+.nf-order-list li.dragging { position: relative; z-index: 3; box-shadow: 0 8px 22px rgba(0, 0, 0, .3); background: var(--md-sys-color-surface-container-highest); }
+.nf-grip { display: flex; padding: 6px 8px; color: var(--md-sys-color-outline); cursor: grab; touch-action: none; }
+
+/* --- loop --- */
+#nf-loop-card { margin-top: 12px; display: flex; flex-direction: column; gap: 10px; }
+.nf-loop-chip { align-self: flex-start; margin-top: 8px; padding: 5px 12px; border: 0; border-radius: 999px; font-size: calc(12px * var(--font-scale, 1)); font-weight: 600; color: var(--md-sys-color-on-primary); background: var(--md-sys-color-primary); cursor: pointer; }
+.nf-loop-chip[hidden] { display: none; }
+
+/* --- search: best match as a larger card --- */
+.track-row.nf-best-match { margin-bottom: 10px; padding: 12px !important; border-radius: 18px; background: var(--md-sys-color-surface-container-high); }
+.track-row.nf-best-match .track-row-thumb { width: 76px !important; height: 76px !important; flex: 0 0 76px; border-radius: 12px; }
+.track-row.nf-best-match .track-row-title { font-size: calc(17px * var(--font-scale, 1)); font-weight: 700; }
+.nf-best-label { display: block; margin-bottom: 3px; font-size: calc(11px * var(--font-scale, 1)); font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--md-sys-color-primary); }
+
+/* --- playlist page --- */
+.nf-pl-details { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; margin-top: 6px; }
+.nf-pl-artists { font-size: calc(13px * var(--font-scale, 1)); color: var(--md-sys-color-on-surface-variant); }
+.nf-pl-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.nf-mini-pill { flex: none; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--md-sys-color-outline-variant); background: transparent; color: var(--md-sys-color-on-surface); font-size: calc(12px * var(--font-scale, 1)); font-weight: 600; cursor: pointer; }
+.nf-mini-pill.active { background: var(--md-sys-color-primary); border-color: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary); }
+
+/* --- sheets --- */
+.nf-sheet-back { position: fixed; inset: 0; z-index: 2147481000; display: flex; align-items: flex-end; justify-content: center; background: rgba(0, 0, 0, 0); transition: background .22s; }
+.nf-sheet-back.show { background: rgba(0, 0, 0, .55); }
+.nf-sheet { width: 100%; max-width: 560px; max-height: 88dvh; display: flex; flex-direction: column; border-radius: 24px 24px 0 0; padding: 18px 18px calc(18px + env(safe-area-inset-bottom)); background: var(--nf-solid, var(--md-sys-color-surface-container)); color: var(--md-sys-color-on-surface); transform: translateY(100%); transition: transform .26s cubic-bezier(.32, .72, 0, 1); box-sizing: border-box; }
+.nf-sheet-back.show .nf-sheet { transform: none; }
+.nf-sheet-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.nf-sheet-head h3 { margin: 0; font-size: calc(19px * var(--font-scale, 1)); font-weight: 700; }
+.nf-sheet-close { display: flex; padding: 6px; border: 0; background: none; color: var(--md-sys-color-on-surface-variant); cursor: pointer; }
+.nf-sheet-body { overflow-y: auto; -webkit-overflow-scrolling: touch; min-height: 0; }
+.nf-sheet-actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 16px; }
+.nf-empty { margin: 8px 0; font-size: calc(14px * var(--font-scale, 1)); color: var(--md-sys-color-on-surface-variant); line-height: 1.45; }
+.nf-center { text-align: center; }
+.nf-qr { width: min(66vw, 260px); margin: 4px auto 10px; padding: 12px; border-radius: 18px; background: #fff; box-sizing: border-box; }
+.nf-qr svg { display: block; width: 100%; height: auto; }
+
+/* --- review --- */
+.nf-review-item { padding: 12px 0; border-top: 1px solid var(--md-sys-color-outline-variant); }
+.nf-review-head { display: flex; align-items: center; gap: 8px; }
+.nf-review-found { display: flex; flex-direction: column; gap: 6px; }
+.nf-review-found:not(:empty) { margin-top: 10px; font-size: calc(13px * var(--font-scale, 1)); }
+.nf-review-pick { display: flex; flex-direction: column; gap: 1px; width: 100%; padding: 9px 12px; border: 0; border-radius: 12px; text-align: left; color: inherit; background: var(--md-sys-color-surface-container-high); cursor: pointer; }
+
+/* --- health check --- */
+.nf-checks { display: flex; flex-direction: column; }
+.nf-check { display: flex; align-items: flex-start; gap: 12px; padding: 11px 0; border-top: 1px solid var(--md-sys-color-outline-variant); }
+.nf-check:first-child { border-top: 0; }
+.nf-check-dot { flex: none; width: 10px; height: 10px; margin-top: 5px; border-radius: 50%; background: var(--md-sys-color-outline-variant); }
+.nf-check.busy .nf-check-dot { background: var(--md-sys-color-primary); animation: nf-pulse 1s ease-in-out infinite; }
+.nf-check.ok .nf-check-dot { background: #4cc38a; }
+.nf-check.warn .nf-check-dot { background: #f2b84b; }
+.nf-check.bad .nf-check-dot { background: #ef6a6a; }
+.nf-check.skip .nf-check-dot { background: var(--md-sys-color-outline); }
+@keyframes nf-pulse { 50% { opacity: .35; } }
+.nf-new-list { margin: 0; padding: 0 0 0 20px; display: flex; flex-direction: column; gap: 9px; font-size: calc(14px * var(--font-scale, 1)); line-height: 1.4; }
+
+/* --- listen together --- */
+.nf-listen-code { margin: 6px 0; text-align: center; font: 700 calc(30px * var(--font-scale, 1)) ui-monospace, Menlo, monospace; letter-spacing: .14em; }
+.nf-listen-join { display: flex; gap: 8px; margin-top: 10px; }
+.nf-listen-join input { flex: 1 1 auto; min-width: 0; text-transform: uppercase; }
+.nf-listen-bar { position: fixed; left: 12px; right: 12px; bottom: calc(var(--chrome-bottom, 140px) + 8px); z-index: 50; display: flex; align-items: center; gap: 10px; padding: 8px 10px 8px 14px; border-radius: 999px; font-size: calc(13px * var(--font-scale, 1)); color: var(--md-sys-color-on-surface); background: var(--nf-solid, var(--md-sys-color-surface-container)); box-shadow: 0 6px 20px rgba(0, 0, 0, .3); }
+.nf-listen-dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--md-sys-color-primary); animation: nf-pulse 1.8s ease-in-out infinite; }
+.nf-listen-text { flex: 1 1 auto; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+body[data-np-seek="line"] #setting-np-wave, body[data-np-seek="sine"] #setting-np-wave { display: none !important; }
+
+/* --- selecting songs: one tidy bar that doesn't cover the list or let it show through --- */
+.multi-select-actions { display: contents; }
+html.is-mobile .multi-select-bar { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 8px 10px; background: var(--nf-solid, var(--md-sys-color-surface-container-highest)); padding: 10px 12px; }
+html.is-mobile .multi-select-bar.hidden { display: none; }
+html.is-mobile .multi-select-bar .multi-select-count { grid-column: 1; grid-row: 1; flex: none; text-align: left; padding-left: 6px; }
+html.is-mobile .multi-select-bar #multi-select-done { grid-column: 2; grid-row: 1; padding: 6px 16px; }
+html.is-mobile .multi-select-actions { grid-column: 1 / -1; grid-row: 2; display: flex; gap: 8px; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; margin: 0 -2px; padding: 0 2px; }
+html.is-mobile .multi-select-actions::-webkit-scrollbar { display: none; }
+html.is-mobile .multi-select-actions button { flex: none; white-space: nowrap; padding: 7px 14px; }
+html.is-mobile .multi-select-actions button[hidden] { display: none; }
+body.np-open .nf-listen-bar, body.multi-select-on .nf-listen-bar { display: none; }
+
+/* The app's background shapes reach past the screen edge; nothing may scroll the whole app sideways because of them */
+html.is-mobile body { overflow: clip !important; }
+
+/* --- the visualizer: behind everything else in its panel, and it never takes a touch --- */
+#nf-cava { position: absolute !important; left: 16px; right: 16px; width: calc(100% - 32px); height: 84px; top: 60%; display: none; pointer-events: none; z-index: -1; }
+#nf-cava.on { display: block; }
+#right-panel:not(.lyrics-empty) #nf-cava { opacity: .42; height: 56px; }
+#nf-cava-mini { position: absolute !important; inset: 0; width: 100%; height: 100%; display: none; pointer-events: none; opacity: .34; border-radius: inherit; z-index: -1; }
+#nf-cava-mini.on { display: block; }
+
+/* --- Spotify playlists in search --- */
+#search-results-container:not([data-filter="playlists"]) #search-playlists-container,
+#search-results-container[data-filter="playlists"] #search-artist-card-container,
+#search-results-container[data-filter="playlists"] #search-albums-container,
+#search-results-container[data-filter="playlists"] #search-tracks-list { display: none !important; }
+.search-filter-chips .chip-btn[hidden] { display: none; }
+#search-playlists-container:not(:empty) { margin: 0 0 14px; }
+/* playlists only show under their own filter, so a search always leads with songs */
+body.hide-albums-tab #view-album.is-playlist #btn-save-album { display: flex !important; }
+/* a list to go through: a smaller cover, so its first songs are on screen straight away */
+html.is-mobile #view-album.is-playlist .album-cover-wrapper { width: min(46vw, 190px) !important; max-width: 190px; }
+.nf-pl-head { margin: 0 0 8px; font-size: calc(17px * var(--font-scale, 1)); font-weight: 700; color: var(--md-sys-color-on-surface); }
+.nf-pl-result { display: flex; align-items: center; gap: 12px; width: 100%; padding: 7px 6px; border: 0; border-radius: 12px; background: none; color: inherit; text-align: left; cursor: pointer; }
+.nf-pl-cover { flex: none; width: 52px; height: 52px; border-radius: 8px; object-fit: cover; background: var(--md-sys-color-surface-container-high); }
+.nf-pl-result .nf-row-text span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* the mini player lets a little of the page show through */
+html.is-mobile body:not(.np-open) .playbar { background: color-mix(in srgb, var(--md-sys-color-surface-container-solid, #1E1F22) 78%, transparent) !important; }
+
+/* --- sideways rows go sideways and nothing else: no wobbling inside the row, and the page holds still during the swipe --- */
+html.is-mobile :is(.home-pl-row, .fy-row, .sp-row, .chips-row, .genre-chips, .suggestion-chips, .nf-genre-row, .nf-looks, .nf-jump, .multi-select-actions, .audio-tabs, .pfx-jump, .my-wave-tracks-row, .search-albums-row, .palette-style-toggle) {
+  overflow-y: hidden !important;
+  touch-action: pan-x;
+  overscroll-behavior-x: contain;
+}
+
+/* ==== a clean pass over the phone layout ==== */
+/* settings: the row the search bar leaves behind goes too, so pages start right under the logo */
+html.is-mobile body:has(#view-settings.active) .top-nav { min-height: 0 !important; height: 0 !important; padding: 0 !important; margin: 0 !important; overflow: hidden; }
+html.is-mobile .settings-view { padding-top: 6px !important; }
+html.is-mobile body:has(#view-settings.active) .app-layout { inset: calc(var(--safe-top) + 48px) 0 var(--chrome-bottom) 0 !important; }
+
+/* every main page says what it is */
+html.is-mobile :is(#view-favorites, #view-local, #view-history) .view-header { flex-wrap: wrap; justify-content: flex-start; align-items: center; gap: 8px; margin-bottom: 14px; }
+html.is-mobile :is(#view-favorites, #view-local, #view-history) .view-header > div:first-child:not(.sort-dropdown):not(.local-add-actions) { display: block !important; flex: 1 1 100%; min-width: 0; }
+html.is-mobile :is(#view-favorites, #view-local, #view-history) .view-header h2 { flex: 1 1 100%; display: block !important; margin: 0; font-size: calc(26px * var(--font-scale, 1)); font-weight: 700; line-height: 1.15; }
+html.is-mobile :is(#view-favorites, #view-local, #view-history) .view-header .view-subtitle { display: block !important; margin-top: 2px; font-size: calc(13px * var(--font-scale, 1)); color: var(--md-sys-color-on-surface-variant); }
+
+/* playlist page: the song controls on one line, the playlist's own tools on the next */
+html.is-mobile .playlist-actions { display: flex !important; flex-wrap: wrap !important; align-items: center; gap: 8px !important; }
+html.is-mobile .playlist-actions::before { content: ""; order: 5; flex: 0 0 100%; height: 0; }
+html.is-mobile .playlist-actions :is(#btn-select-playlist, #btn-download-playlist, #btn-fav-all-playlist, #btn-rename-playlist, #btn-export-playlist, #btn-delete-playlist) { order: 6; }
+html.is-mobile #btn-download-playlist-label, html.is-mobile #playlist-sort-label { display: none; }
+html.is-mobile #playlist-sort-trigger { min-width: 0; width: auto; padding-inline: 12px; }
+html.is-mobile #btn-download-playlist { padding-inline: 12px; }
+html.is-mobile #btn-delete-playlist { margin-left: auto; }
+html.is-mobile .playlist-actions :is(#btn-share-playlist, #btn-download-playlist, #btn-fav-all-playlist, #btn-rename-playlist, #btn-export-playlist, #btn-delete-playlist) { width: 38px !important; height: 38px !important; min-width: 38px !important; padding: 0 !important; justify-content: center; }
+html.is-mobile .playlist-actions :is(#btn-shuffle-playlist, #btn-select-playlist, #playlist-sort-trigger) { height: 38px; min-height: 38px; }
+/* an empty library needs one button and nothing to search */
+html.is-mobile #view-local:has(#btn-add-local-files-empty) :is(#btn-add-local-files, #local-search-box) { display: none !important; }
+
+/* things that only mean something on a computer */
+html.is-mobile #setting-audio-output-row,
+html.is-mobile .setting-item:has(#btn-open-shortcuts),
+html.is-mobile .setting-item:has(#btn-open-logs) { display: none !important; }
+
+/* the mini player's bars stay out from behind the words */
+#nf-cava-mini { -webkit-mask-image: linear-gradient(to right, rgba(0, 0, 0, .18) 42%, #000 74%); mask-image: linear-gradient(to right, rgba(0, 0, 0, .18) 42%, #000 74%); }
+
+/* no progress line on the mini player: the seek bar is in Now Playing */
+html.is-mobile .playbar::after { display: none !important; }
