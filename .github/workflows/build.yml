@@ -60,7 +60,7 @@ jobs:
           foreach ($f in 'sync-host.json', 'sync-join.json') { if (Test-Path $f) { Write-Host "== $f"; Get-Content $f } else { Write-Host "no $f" } }
           foreach ($d in 'sync-host', 'sync-join') { if (Test-Path "$d\logs\sine.log") { Write-Host "== $d log"; Get-Content "$d\logs\sine.log" -Tail 25 } }
           $h = Get-Content sync-host.json -Raw | ConvertFrom-Json; $j = Get-Content sync-join.json -Raw | ConvertFrom-Json
-          if (-not ($j.sync.gotHosts -and $h.sync.gotTheirs)) { Write-Host "sync did not complete"; exit 1 }
+          if (-not ($j.sync.gotHosts -and $h.sync.gotTheirs -and $j.sync.gotHostsEarlier -and $h.sync.gotTheirEarlier -and $j.sync.gotFavorite)) { Write-Host "sync did not complete"; exit 1 }
 
       - uses: actions/upload-artifact@v4
         with:

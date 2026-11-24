@@ -1,7 +1,7 @@
 {
   "name": "sine",
   "productName": "Sine",
-  "version": "2.10.4",
+  "version": "2.10.5",
   "description": "Sine music player for Windows",
   "main": "main.js",
   "author": "Toby",

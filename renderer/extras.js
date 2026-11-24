@@ -1155,7 +1155,15 @@
   }
 
   // ---- what's new, and a notice when a new file is ready ----
-  const WHATS_NEW = [
+  const WHATS_NEW = document.documentElement.classList.contains('is-desktop') ? [
+    'Spotify song links work, in Import and pasted into search',
+    'Log in to Spotify on the PC with the same Redirect URI as your iPhone (muriel://spotify-callback)',
+    'Search Spotify with your own developer key (Settings, Integrations)',
+    'Sync, listen-along and shared playlist links open straight in Sine',
+    'Downloads in MP3, FLAC, M4A, Opus or WAV, with your sound settings if you like',
+    'Streaming quality and your chosen output device now apply to everything Sine plays',
+    'The Spotify source button and song names no longer get cut off, and the window fits smaller screens',
+  ] : [
     'Taking an AirPod out pauses the song at once, instead of it carrying on through the speaker',
     'A smoother opening animation that starts straight away',
     'Fixed: turning the screen off just after changing the sound no longer stops and starts it a few times',

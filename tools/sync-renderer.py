@@ -7,6 +7,7 @@ Leaves out what only the iPhone needs (its bridge to iOS, the phone layout scrip
 (desktop.js, desktop-engine.js, desktop.css, kept in tools/renderer-extra/) and switches Sine's own layers
 (the sound engine, the Sine touches) on for the PC as well as the phone.
 """
+import json
 import os
 import re
 import shutil
@@ -106,5 +107,20 @@ edit('extras.js', [
 edit('encore.js', [
     ("    if (api && api.shareText) { await api.shareText(I18n.T('My Sine Encore'), text); return; }",
      "    if (api && api.shareText) { if (await api.shareText(I18n.T('My Sine Encore'), text) === 'copied' && window.MurielCore) window.MurielCore.toast(I18n.Tm('Copied your Encore')); return; }"),
+])
+# the PC version's own number and notes (the iPhone's are about the iPhone)
+pc_version = json.load(open(os.path.join(here, '..', 'package.json'), encoding='utf-8'))['version']
+edit('build-info.js', [(re.compile(r'"version": "[^"]*"'), f'"version": "{pc_version}"')])
+edit('extras.js', [
+    ("  const WHATS_NEW = [\n",
+     "  const WHATS_NEW = document.documentElement.classList.contains('is-desktop') ? [\n"
+     "    'Spotify song links work, in Import and pasted into search',\n"
+     "    'Log in to Spotify on the PC with the same Redirect URI as your iPhone (muriel://spotify-callback)',\n"
+     "    'Search Spotify with your own developer key (Settings, Integrations)',\n"
+     "    'Sync, listen-along and shared playlist links open straight in Sine',\n"
+     "    'Downloads in MP3, FLAC, M4A, Opus or WAV, with your sound settings if you like',\n"
+     "    'Streaming quality and your chosen output device now apply to everything Sine plays',\n"
+     "    'The Spotify source button and song names no longer get cut off, and the window fits smaller screens',\n"
+     "  ] : [\n"),
 ])
 print('renderer ready:', dst)

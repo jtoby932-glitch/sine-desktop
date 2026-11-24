@@ -103,9 +103,14 @@ function iconPath(name) {
 
 function createWindow() {
   const saved = readSettings().bounds;
+  // the first window fits the screen: a laptop at 125-150 % scaling has less than 820 points of height, and the
+  // player bar would start below the bottom edge
+  const area = screen.getPrimaryDisplay().workAreaSize;
+  const width = Math.min(1280, Math.max(800, area.width - 48));
+  const height = Math.min(820, Math.max(560, area.height - 48));
   win = new BrowserWindow({
-    width: 1280,
-    height: 820,
+    width,
+    height,
     minWidth: 360,
     minHeight: 120,
     ...(saved && visibleOnSomeScreen(saved) ? saved : {}),

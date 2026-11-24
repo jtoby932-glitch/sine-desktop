@@ -21,6 +21,11 @@ module.exports = async function smokeTest({ app, win, serverPort, serverToken })
     const codeFile = process.env.SINE_SYNC_CODE;
     const r = { role };
     const T0 = Date.now();
+    // music each copy had before linking comes across too
+    const song = { id: 'dQw4w9WgXcQ', title: 'Never Gonna Give You Up', artist: 'Rick Astley', platform: 'youtube', url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ' };
+    const has = (name) => `JSON.parse(localStorage.getItem('devsize_playlists') || '[]').some((p) => p.name === ${JSON.stringify(name)})`;
+    await page(`MurielCore.createPlaylist('Made before linking (${role})', [${JSON.stringify(song)}])`);
+    if (role === 'host') await page(`MurielCore.toggleFavorite(${JSON.stringify(song)})`);
     if (role === 'host') {
       await page('MurielSync.link()');
       const code = await waitIn(`(() => { const c = document.querySelector('.sync-code'); return c && c.textContent.trim(); })()`, 20000);
@@ -34,6 +39,7 @@ module.exports = async function smokeTest({ app, win, serverPort, serverToken })
         await page(`MurielCore.createPlaylist('Sync test from host', [{ id: 'dQw4w9WgXcQ', title: 'Never Gonna Give You Up', artist: 'Rick Astley', platform: 'youtube', url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ' }])`);
         // and what the other copy adds comes here
         r.gotTheirs = !!(await waitIn(`JSON.parse(localStorage.getItem('devsize_playlists') || '[]').some((p) => p.name === 'Sync test from join')`, 60000));
+        r.gotTheirEarlier = !!(await waitIn(has('Made before linking (join)'), 10000));
         await new Promise((res) => setTimeout(res, 8000)); // the other copy's last messages
       }
       r.status = await page('JSON.stringify(MurielSync.status())').catch(() => '');
@@ -51,6 +57,8 @@ module.exports = async function smokeTest({ app, win, serverPort, serverToken })
     if (r.connected) {
       r.gotHosts = !!(await waitIn(`JSON.parse(localStorage.getItem('devsize_playlists') || '[]').some((p) => p.name === 'Sync test from host')`, 60000));
       r.inApp = await page(`MurielCore.state.playlists.some((p) => p.name === 'Sync test from host')`).catch(() => false);
+      r.gotHostsEarlier = !!(await waitIn(has('Made before linking (host)'), 10000));
+      r.gotFavorite = !!(await waitIn(`JSON.parse(localStorage.getItem('devsize_favorites') || '[]').some((t) => t.id === 'dQw4w9WgXcQ')`, 10000));
       await page(`MurielCore.createPlaylist('Sync test from join', [])`);
       await new Promise((res) => setTimeout(res, 10000));
     }
