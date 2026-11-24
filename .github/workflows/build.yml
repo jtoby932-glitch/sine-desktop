@@ -26,6 +26,9 @@ jobs:
         run: node test/live-check.js
         continue-on-error: true
 
+      - name: Spotify links and search on the server (Spotify stood in for)
+        run: node test/spotify-check.js
+
       - name: Build the installer
         run: npx electron-builder --win nsis --x64 --publish never
         env:
@@ -40,6 +43,24 @@ jobs:
           if (Test-Path smoke.json) { Get-Content smoke.json } else { Write-Host "no report written" }
           if (Test-Path "smoke-user\logs\sine.log") { Get-Content "smoke-user\logs\sine.log" -Tail 40 }
           if ($p.ExitCode -ne 0) { Write-Host "smoke test failed: $($p.ExitCode)"; exit 1 }
+
+      - name: Sync between two copies of Sine (two PCs on one machine)
+        id: sync
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          $env:SINE_SYNC_CODE = "$PWD\sync-code.txt"
+          Remove-Item sync-code.txt -ErrorAction SilentlyContinue
+          $env:SINE_SYNC_ROLE = 'host'; $env:SINE_SMOKE_OUT = "$PWD\sync-host.json"; $env:SINE_SMOKE_DIR = "$PWD\sync-host"
+          $a = Start-Process -FilePath "dist\win-unpacked\Sine.exe" -ArgumentList "--smoke-test" -PassThru
+          Start-Sleep -Seconds 4
+          $env:SINE_SYNC_ROLE = 'join'; $env:SINE_SMOKE_OUT = "$PWD\sync-join.json"; $env:SINE_SMOKE_DIR = "$PWD\sync-join"
+          $b = Start-Process -FilePath "dist\win-unpacked\Sine.exe" -ArgumentList "--smoke-test" -PassThru
+          $null = $b.WaitForExit(320000); $null = $a.WaitForExit(320000)
+          foreach ($f in 'sync-host.json', 'sync-join.json') { if (Test-Path $f) { Write-Host "== $f"; Get-Content $f } else { Write-Host "no $f" } }
+          foreach ($d in 'sync-host', 'sync-join') { if (Test-Path "$d\logs\sine.log") { Write-Host "== $d log"; Get-Content "$d\logs\sine.log" -Tail 25 } }
+          $h = Get-Content sync-host.json -Raw | ConvertFrom-Json; $j = Get-Content sync-join.json -Raw | ConvertFrom-Json
+          if (-not ($j.sync.gotHosts -and $h.sync.gotTheirs)) { Write-Host "sync did not complete"; exit 1 }
 
       - uses: actions/upload-artifact@v4
         with:
@@ -57,9 +78,9 @@ jobs:
           v=$(node -p "require('./package.json').version")
           f="dist/Sine-Setup-$v.exe"
           notes="Sine $v for Windows. Run the installer; Windows may say it doesn't recognise the app (it isn't code-signed): More info, then Run anyway. Built and checked on Windows by run ${{ github.run_id }} (commit ${GITHUB_SHA:0:7})."
+          # a version is released once: work in progress on an existing version never replaces its installer
           if gh release view "v$v" >/dev/null 2>&1; then
-            gh release upload "v$v" "$f" --clobber
-            gh release edit "v$v" --notes "$notes"
+            echo "v$v is already released; bump the version in package.json to release this build"
           else
             gh release create "v$v" "$f" --target "$GITHUB_SHA" --title "Sine $v for PC" --notes "$notes"
           fi
@@ -71,4 +92,5 @@ jobs:
           path: |
             smoke.json
             smoke-user/logs/
+            sync-*.json
           if-no-files-found: ignore

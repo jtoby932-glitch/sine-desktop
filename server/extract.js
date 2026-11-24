@@ -101,9 +101,12 @@ async function youtubeHlsAudio(id) {
     // The same answer lists the full-quality Opus file (itag 251, ~130-160 kbps) as a plain link. For this
     // client it downloads without a proof-of-origin token (yt-dlp has no GVS token policy for visionos).
     // Phones that play Opus try it first and fall back to the HLS AAC if it fails (shims/child_process.js).
-    const f251 = ((j.streamingData && j.streamingData.adaptiveFormats) || []).find((f) => f.itag === 251 && f.url && Number(f.contentLength) > 0);
-    const opus = f251 ? { url: f251.url, size: Number(f251.contentLength) } : null;
-    return { kind: 'hls', url: playlist, headers: { 'User-Agent': VOS_UA }, ext: 'aac', opus, artist: (d.author || '').replace(/\s*-\s*Topic$/i, ''), title: d.title, duration: Number(d.lengthSeconds) || 0 };
+    const formats = (j.streamingData && j.streamingData.adaptiveFormats) || [];
+    const plain = (itag) => { const f = formats.find((x) => x.itag === itag && x.url && Number(x.contentLength) > 0); return f ? { url: f.url, size: Number(f.contentLength) } : null; };
+    const opus = plain(251);
+    // every version on offer, for Settings → Tracks → Streaming quality (as the iPhone app does)
+    const versions = { 251: opus, 250: plain(250), hls234: pick(234) || null, hls233: pick(233) || null };
+    return { kind: 'hls', url: playlist, headers: { 'User-Agent': VOS_UA }, ext: 'aac', opus, formats: versions, artist: (d.author || '').replace(/\s*-\s*Topic$/i, ''), title: d.title, duration: Number(d.lengthSeconds) || 0 };
   }
   throw new Error('YouTube refused the request');
 }

@@ -11,6 +11,28 @@ if (SMOKE && process.env.SINE_SMOKE_DIR) app.setPath('userData', process.env.SIN
 // one Sine at a time: opening it again brings the running one forward
 if (!SMOKE && !app.requestSingleInstanceLock()) { app.quit(); process.exit(0); }
 
+// muriel:// links open in Sine, as on the iPhone: the Spotify login coming back, a shared playlist, listening
+// along with a friend, linking a device for sync. Windows starts Sine (or hands the link to the one running) with
+// the link on the command line.
+let protocolRegistered = false;
+if (!SMOKE) {
+  try {
+    protocolRegistered = process.defaultApp
+      ? app.setAsDefaultProtocolClient('muriel', process.execPath, [path.resolve(process.argv[1] || '.')])
+      : app.setAsDefaultProtocolClient('muriel');
+  } catch (e) {}
+}
+// the Spotify login comes back to the same address on the PC as on the iPhone (one setting in Spotify's dashboard)
+if (protocolRegistered) process.env.SINE_SPOTIFY_REDIRECT = 'muriel://spotify-callback';
+const linkIn = (argv) => (argv || []).find((a) => /^muriel:\/\//i.test(String(a))) || null;
+let pendingLink = linkIn(process.argv);
+function deliverLink(link) {
+  if (!link) return;
+  if (win && !win.isDestroyed() && pageReady) win.webContents.send('deep-link', link);
+  else pendingLink = link;
+}
+let pageReady = false;
+
 app.setAppUserModelId('io.github.sine.desktop');
 // music starts without a click first (the queue carries on after a restart)
 app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required');
@@ -41,6 +63,8 @@ globalThis.__murielVault = (name) => {
       return JSON.parse(safeStorage.isEncryptionAvailable() ? safeStorage.decryptString(raw) : raw.toString('utf8'));
     },
     write(value) {
+      // nothing (null) means forget it
+      if (value == null) { fs.rmSync(file, { force: true }); return; }
       fs.mkdirSync(path.dirname(file), { recursive: true });
       const text = JSON.stringify(value);
       fs.writeFileSync(file, safeStorage.isEncryptionAvailable() ? safeStorage.encryptString(text) : text, { mode: 0o600 });
@@ -101,6 +125,7 @@ function createWindow() {
     },
   });
   if (readSettings().maximized) win.maximize();
+  win.webContents.on('did-start-loading', () => { pageReady = false; });
   win.loadFile(path.join(__dirname, 'renderer', 'index.html'));
   win.once('ready-to-show', () => win.show());
 
@@ -214,6 +239,25 @@ handle('app:trim-memory', () => { if (win) win.webContents.session.clearCache().
 handle('app:open-external', (url) => { if (/^https?:\/\//i.test(String(url)) || /^mailto:/i.test(String(url))) shell.openExternal(String(url)); });
 handle('app:log-error', (msg) => { if (logger) logger.error(`[page] ${String(msg).slice(0, 2000)}`); });
 handle('app:copy-text', (text) => { clipboard.writeText(String(text || '')); return 'copied'; });
+handle('app:open-logs', () => { if (logger) shell.openPath(path.dirname(logger.LOG_FILE || path.join(app.getPath('userData'), 'logs', 'sine.log'))); });
+handle('app:diagnostics', () => {
+  let tail = '';
+  try { const t = logger && logger.tail ? logger.tail(120) : ''; tail = Array.isArray(t) ? t.join('\n') : String(t || ''); } catch (e) {}
+  return [`Sine for PC ${app.getVersion()} (Electron ${process.versions.electron}, ${process.platform} ${require('os').release()}, ${process.arch})`,
+    `Server port ${serverPort}`, `GPU ${(() => { try { return app.getGPUFeatureStatus().gpu_compositing; } catch (e) { return '?'; } })()}`,
+    '--- app log ---', tail].join('\n');
+});
+// the page's first links (Sine opened from one) wait until it is listening
+// Settings → Tracks → Streaming quality: which version of a song the downloader fetches (server/ytdlp-emulation.js)
+handle('app:set-quality', (tier) => { if (['veryhigh', 'high', 'medium', 'low'].includes(tier)) globalThis.__sineQuality = tier; });
+handle('app:page-ready', () => { pageReady = true; const l = pendingLink; pendingLink = null; return l; });
+// secrets the page keeps (your Spotify developer keys), in the same encrypted store the server reads them from
+ipcMain.on('vault:read', (e, name) => {
+  try { e.returnValue = { ok: true, value: globalThis.__murielVault(name).read() }; } catch (err) { e.returnValue = { ok: false }; }
+});
+ipcMain.on('vault:write', (e, name, value) => {
+  try { globalThis.__murielVault(name).write(value); e.returnValue = true; } catch (err) { e.returnValue = false; }
+});
 
 handle('files:save-text', async ({ defaultName, content } = {}) => {
   if (typeof content !== 'string') return { success: false, error: 'Nothing to save' };
@@ -302,7 +346,8 @@ handle('downloads:set-dir', (dir) => ({ success: !!platform.setDownloadDir(dir) 
 handle('downloads:reset-dir', () => ({ success: !!platform.setDownloadDir(null) }));
 
 // ---- start ----
-app.on('second-instance', () => showWindow());
+app.on('second-instance', (e, argv) => { showWindow(); deliverLink(linkIn(argv)); });
+app.on('open-url', (e, url) => { e.preventDefault(); showWindow(); deliverLink(url); });
 app.on('before-quit', () => { quitting = true; });
 app.on('will-quit', () => { globalShortcut.unregisterAll(); if (server) server.stopServer(); });
 app.on('window-all-closed', () => app.quit());

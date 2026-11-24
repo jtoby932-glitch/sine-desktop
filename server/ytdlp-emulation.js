@@ -146,14 +146,19 @@ async function download(args, target, signal) {
   if (signal && signal.aborted) throw new Error('download cancelled');
   const template = opt(args, '-o');
   const named = (ext) => (template.includes('%(ext)s') ? template.replace('%(ext)s', ext) : template);
-  // a PC plays Opus: full quality when the client found it, the stream below otherwise
-  const opus = audio.opus ? await downloadRanges(audio.opus.url, audio.headers, signal, audio.opus.size).catch((e) => {
+  // Settings → Tracks → Streaming quality (the page tells the main process: globalThis.__sineQuality). Very high is
+  // Opus at ~160 kbps, High AAC at ~128, Medium Opus at ~70, Low AAC at ~48; whatever isn't offered falls back.
+  const tier = globalThis.__sineQuality || 'veryhigh';
+  const f = audio.formats || {};
+  const wantOpus = tier === 'veryhigh' ? audio.opus : tier === 'medium' ? (f[250] || null) : null;
+  const hlsUrl = (tier === 'low' ? (f.hls233 || f.hls234) : tier === 'high' ? (f.hls234 || f.hls233) : tier === 'medium' ? (f.hls233 || f.hls234) : null) || audio.url;
+  const opus = wantOpus ? await downloadRanges(wantOpus.url, audio.headers, signal, wantOpus.size).catch((e) => {
     if (signal && signal.aborted) throw e;
     console.warn('[sine] Opus download failed, using AAC', e && e.message);
     return null;
   }) : null;
   if (opus) writeAtomic(named('webm'), opus);
-  else if (audio.kind === 'hls') writeAtomic(named(audio.ext), await downloadHls(audio.url, audio.headers, signal, audio.container));
+  else if (audio.kind === 'hls') writeAtomic(named(audio.ext), await downloadHls(hlsUrl, audio.headers, signal, audio.container));
   else await downloadPlain(audio.url, named(audio.ext), audio.headers || { 'User-Agent': 'Mozilla/5.0' }, signal);
   enforceCacheLimit();
   return '';

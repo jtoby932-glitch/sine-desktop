@@ -1393,7 +1393,7 @@
     const pane = document.querySelector('.sp-pane[data-mode="login"]');
     if (pane) {
       const note = pane.firstElementChild;
-      if (note) note.innerHTML = `Brings in your liked songs and the playlists you made or collaborate on. Spotify doesn't share other people's playlists this way, so use their link instead. In your <b>Spotify developer dashboard</b>, open your app, go to Settings and add this Redirect URI:<code class="nf-code">${esc((window.MURIEL_BUILD || {}).spotifyRedirect || 'muriel://spotify-callback')}</code>Then tap Log in below. Safari opens, you approve, and it comes back here.`;
+      if (note) note.innerHTML = `Brings in your liked songs and the playlists you made or collaborate on. Spotify doesn't share other people's playlists this way, so use their link instead. In your <b>Spotify developer dashboard</b>, open your app, go to Settings and add this Redirect URI:<code class="nf-code">${esc((window.MURIEL_BUILD || {}).spotifyRedirect || 'muriel://spotify-callback')}</code>${document.documentElement.classList.contains('is-desktop') ? 'Then click Log in below. Your browser opens; approve, and when the browser asks to open Sine, allow it.' : 'Then tap Log in below. Safari opens, you approve, and it comes back here.'}`;
       const input = $('sp-client-id');
       if (input && !input.value) {
         try {

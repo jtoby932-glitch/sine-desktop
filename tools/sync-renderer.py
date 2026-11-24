@@ -81,4 +81,13 @@ edit('nocturne.js', [
         <li><b>Sliders</b>: click or drag anywhere on one. Double-click an equalizer slider to set it back to 0.</li>
         <li><b>Autoplay</b> follows the song and its genre, not its name. Change it in Settings → Tracks.</li>`;"""),
 ])
+# the PC fetches songs itself and keeps them as they came: nothing upgrades in the background
+edit('nocturne.js', [
+    (" Songs you’ve already saved upgrade in the background when you play them.", " Songs you’ve already saved stay as they are."),
+])
+# the Spotify login on a PC: the browser opens, and Windows hands the muriel:// answer back to Sine
+edit('extras.js', [
+    ("Then tap Log in below. Safari opens, you approve, and it comes back here.",
+     "${document.documentElement.classList.contains('is-desktop') ? 'Then click Log in below. Your browser opens; approve, and when the browser asks to open Sine, allow it.' : 'Then tap Log in below. Safari opens, you approve, and it comes back here.'}"),
+])
 print('renderer ready:', dst)

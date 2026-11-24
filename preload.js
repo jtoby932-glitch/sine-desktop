@@ -37,6 +37,16 @@ contextBridge.exposeInMainWorld('electronAPI', {
   trimMemory: call('app:trim-memory'),
   openExternal: call('app:open-external'),
   logError: call('app:log-error'),
+  openLogsFolder: call('app:open-logs'),
+  getDiagnostics: call('app:diagnostics'),
+  copyText: (text) => ipcRenderer.invoke('app:copy-text', text).then(() => true),
+  // muriel:// links (desktop.js turns them into the page's muriel:deeplink events)
+  onDeepLink: listen('deep-link'),
+  pageReady: call('app:page-ready'),
+  setQuality: call('app:set-quality'),
+  // the secrets store (globalThis.__murielVault in desktop.js): read and written straight away, like on the iPhone
+  vaultRead: (name) => ipcRenderer.sendSync('vault:read', String(name)),
+  vaultWrite: (name, value) => ipcRenderer.sendSync('vault:write', String(name), value == null ? null : JSON.parse(JSON.stringify(value))),
   getLauncherInfo: async () => ({ platform: process.platform, canInstall: false, installed: true }),
   welcomeFinish: none,
   onWelcomeResult: none,
@@ -58,19 +68,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   setDownloadDir: call('downloads:set-dir'),
   resetDownloadDir: call('downloads:reset-dir'),
 
-  // parts of the original desktop app Sine doesn't have: themes and plugins folders, Discord status, Google import
+  // parts of the original desktop app Sine doesn't have (themes and plugins folders, Discord status, Google login)
+  // are left out, so the page hides them as it does on the iPhone
   getAudioOutputInfo: async () => null,
-  listThemes: async () => [],
-  listPlugins: async () => [],
-  importThemes: async () => [],
-  getAppCss: async () => '',
-  setThemeEnabled: async () => false,
-  setPluginEnabled: async () => false,
-  removeTheme: async () => false,
-  removePlugin: async () => false,
-  disableAllThemes: async () => {},
-  disableAllPlugins: async () => {},
-  discordPresenceUpdate: none,
-  discordPresenceClear: none,
-  googleImportLibrary: async () => ({ success: false, error: 'Not available in Sine' }),
 });

@@ -510,7 +510,7 @@
       const opus = Q.canOpus();
       if (t === 'veryhigh') {
         return opus
-          ? 'Opus at about 160 kbps, around 1.2 MB a minute. Uses the official recording when it can find one. Songs you’ve already saved upgrade in the background when you play them.'
+          ? 'Opus at about 160 kbps, around 1.2 MB a minute. Uses the official recording when it can find one. Songs you’ve already saved stay as they are.'
           : 'This iPhone can’t play Opus, so this uses AAC at about 128 kbps, around 1 MB a minute.';
       }
       if (t === 'medium' && opus) return 'Opus at about 70 kbps, around 0.5 MB a minute. Songs you’ve already saved stay as they are.';

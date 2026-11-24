@@ -24,3 +24,51 @@ html.is-desktop .tvk-row:has(#btn-tvk-viz-connected) { display: none !important;
 @media (min-width: 601px) {
   html.is-desktop .audio-menu-card { height: min(760px, 88vh); max-height: min(760px, 88vh); }
 }
+
+/* ---- the search sources: four of them (Sine added Spotify), so the row needs more room than Riff's three ---- */
+html.is-desktop .platform-switch-container { max-width: 680px; }
+/* a window narrower than about 1560 px: only the chosen source keeps its name, the others are icons (the full row
+   cut Spotify off and squeezed the search box) */
+@media (max-width: 1560px) {
+  html.is-desktop body:not(.compact-engine-btns) .platform-btn:not(.active) { padding: 6px 10px; gap: 0; }
+  html.is-desktop body:not(.compact-engine-btns) .platform-btn:not(.active) span { max-width: 0; opacity: 0; margin: 0; }
+  /* measured right after a resize (app.js updateEngineWidthVar): no half-finished animation in the way */
+  html.is-desktop .platform-btn, html.is-desktop .platform-btn span { transition: background var(--transition-fast), color var(--transition-fast) !important; }
+}
+
+/* ---- the player bar: the song's name gets the room ---- */
+/* edit, download and share fold into one "more" button when the left side is narrow (desktop.js adds it); the
+   heart stays */
+html.is-desktop .playbar-left { container-type: inline-size; container-name: pbleft; }
+html.is-desktop #btn-playbar-overflow { display: none; }
+@container pbleft (max-width: 560px) {
+  html.is-desktop .playbar-left { gap: 8px; }
+  html.is-desktop .playbar-left .artwork-wrapper { margin-right: 4px; }
+  html.is-desktop #btn-edit-current-track, html.is-desktop #btn-playbar-more, html.is-desktop #btn-playbar-share { display: none !important; }
+  html.is-desktop #btn-playbar-overflow { display: inline-flex; }
+}
+html.is-desktop body.mini #btn-playbar-overflow { display: none !important; }
+@media (max-width: 1440px) {
+  html.is-desktop .playbar { grid-template-columns: minmax(280px, 1fr) minmax(300px, 520px) minmax(280px, 1fr) !important; }
+}
+html.is-desktop .playbar-left .track-meta { max-width: 260px; }
+
+/* ---- Settings: the list of categories scrolls inside the space above the player bar ---- */
+html.is-desktop .settings-nav { max-height: calc(100vh - 236px); }
+@media (max-height: 820px) {
+  html.is-desktop .settings-nav-btn { height: calc(38px * var(--font-scale, 1)); }
+}
+
+/* ---- Import from Spotify: the three ways fit on one line each ---- */
+html.is-desktop #spotify-import-modal .dialog-card { width: min(500px, calc(100vw - 48px)); max-width: none; }
+html.is-desktop .sp-modes button { white-space: nowrap; }
+
+/* ---- things the PC version doesn't have: the yt-dlp/ffmpeg download (songs come in through the app itself),
+   AirPods presses (iPhone), plugins, and the YouTube "Log in" (it needs the old desktop app's Google window;
+   playlist links work) ---- */
+html.is-desktop :is(#tools-row, #setting-airpods, #settings-nav [data-cat="plugins"], .settings-section[data-cat="plugins"], #link-modes, .link-pane[data-mode="login"]) { display: none !important; }
+@media (max-width: 1200px) {
+  html.is-desktop .playbar { grid-template-columns: minmax(280px, 1fr) minmax(260px, 420px) minmax(280px, 1fr) !important; }
+}
+/* a scrollbar you can see when the list doesn't fit (it scrolled invisibly before) */
+html.is-desktop .settings-nav { scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--md-sys-color-on-surface) 25%, transparent) transparent; }

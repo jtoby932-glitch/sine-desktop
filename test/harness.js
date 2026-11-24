@@ -46,9 +46,10 @@ async function open({ width = 1280, height = 820, userDir } = {}) {
       getCacheSize: rec('getCacheSize', { audio: 1000, web: 0, total: 1000 }), clearCache: rec('clearCache', true), getDataDir: rec('getDataDir', { dir: 'C:\\Users\\Toby\\AppData\\Roaming\\Sine\\Music library', defaultDir: 'x', isCustom: false }),
       pickDataDir: rec('pickDataDir', null), setDataDir: rec('setDataDir', { success: true }), getDownloadDir: rec('getDownloadDir', { dir: 'C:\\Users\\Toby\\Music\\Sine', isCustom: false }),
       pickDownloadDir: rec('pickDownloadDir', null), setDownloadDir: rec('setDownloadDir', { success: true }), resetDownloadDir: rec('resetDownloadDir', { success: true }),
-      getAudioOutputInfo: async () => null, listThemes: async () => [], listPlugins: async () => [], importThemes: async () => [], getAppCss: async () => '',
-      setThemeEnabled: async () => false, setPluginEnabled: async () => false, removeTheme: async () => false, removePlugin: async () => false, disableAllThemes: async () => {}, disableAllPlugins: async () => {},
-      discordPresenceUpdate: () => {}, discordPresenceClear: () => {}, googleImportLibrary: async () => ({ success: false }),
+      getAudioOutputInfo: async () => null, openLogsFolder: rec('openLogsFolder'), getDiagnostics: rec('getDiagnostics', 'diag'), copyText: rec('copyText', true),
+      onDeepLink: (cb) => { window.__deepLink = cb; }, pageReady: rec('pageReady', null), setQuality: rec('setQuality'),
+      vaultRead: (n) => { const v = window.__vault && window.__vault[n]; return v === undefined ? { ok: false } : { ok: true, value: v }; },
+      vaultWrite: (n, v) => { calls.push(['vaultWrite', n, v]); window.__vault = window.__vault || {}; if (v == null) delete window.__vault[n]; else window.__vault[n] = v; return true; },
     };
     try { if (!localStorage.getItem('nocturne_seen_version')) localStorage.setItem('nocturne_seen_version', '2.10.4'); } catch (e) {}
     try { if (sessionStorage.getItem('__cold') !== '1') sessionStorage.setItem('sine_opened', '1'); } catch (e) {}

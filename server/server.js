@@ -1976,7 +1976,133 @@ async function searchYtmTracks(query, limit = 16) {
   }
 }
 
+// ---- Spotify songs (as in the iPhone app) ----
+// A Spotify song link (open.spotify.com/track/…, spotify:track:…) becomes a song Sine finds on YouTube; Spotify search
+// uses the listener's own developer keys (Settings → Integrations) with Spotify's official API. Without keys a link
+// still works: the song's public embed page names it.
+const SPOTIFY_EMBED_UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Safari/605.1.15';
+function spotifyTrackIdFromLink(text) {
+  const m = String(text || '').trim().match(/^(?:(?:https?:\/\/)?open\.spotify\.com\/(?:intl-[a-z-]+\/)?(?:embed\/)?track\/|spotify:track:)([a-zA-Z0-9]{22})(?:[/?#]|$)/);
+  return m ? m[1] : null;
+}
+function spotifySong(t) {
+  const id = t.id || String(t.uri || '').split(':').pop();
+  const artist = (Array.isArray(t.artists) ? t.artists : (t.artists && t.artists.items) || [])
+    .map((a) => a.name || (a.profile && a.profile.name)).filter(Boolean).join(', ');
+  const title = t.name || t.title || '';
+  const ms = typeof t.duration_ms === 'number' ? t.duration_ms : typeof t.duration === 'number' ? t.duration : (t.duration && t.duration.totalMilliseconds) || 0;
+  const art = ((t.album && t.album.images) || (t.albumOfTrack && t.albumOfTrack.coverArt && t.albumOfTrack.coverArt.sources) ||
+    (t.coverArt && t.coverArt.sources) || (t.visualIdentity && t.visualIdentity.image) || [])
+    .slice().sort((a, b) => (b.width || b.maxWidth || 0) - (a.width || a.maxWidth || 0))[0];
+  const q = `${artist} ${title}`.trim();
+  if (!title) return null;
+  return {
+    id: `sp_${id}`, spotifyId: id, title, artist, duration: Math.round(ms / 1000), thumbnail: (art && art.url) || '',
+    url: `https://www.youtube.com/results?search_query=${encodeURIComponent(q)}`, searchQuery: q, platform: 'youtube', isCached: false,
+    ...(t.explicit || t.isExplicit ? { isExplicit: true } : {}),
+  };
+}
+const spotifyError = (message, code, status) => Object.assign(new Error(message), { code, status });
+async function spotifySongFromEmbed(id) {
+  const r = await globalThis.__murielFetch(`https://open.spotify.com/embed/track/${id}`, { headers: { 'User-Agent': SPOTIFY_EMBED_UA, 'Accept-Language': 'en-US,en;q=0.9', Referer: 'https://open.spotify.com/' } });
+  if (r.status === 404) throw spotifyError('Song not found', 'spotify_not_found', 404);
+  if (r.status === 429) throw spotifyError('Spotify rate limited (429)', 'spotify_rate_limited', 429);
+  if (r.status >= 400) throw spotifyError(`Spotify returned status ${r.status}`, 'spotify_error', r.status);
+  const html = await r.text();
+  const next = html.match(/<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/);
+  let props = null;
+  try { props = next ? JSON.parse(next[1]).props.pageProps : null; } catch (e) {}
+  const entity = props && props.state && props.state.data && (props.state.data.entity || props.state.data);
+  const song = entity ? spotifySong({ ...entity, id }) : null;
+  if (song && song.artist) return song;
+  const meta = (name) => (html.match(new RegExp(`<meta[^>]+property=["']${name}["'][^>]+content=["']([^"']+)["']`, 'i')) || [])[1] || '';
+  const title = meta('og:title');
+  const artist = (html.match(/href="[^"]*\/artist\/[^"]*"[^>]*>([^<]+)</) || [])[1] || '';
+  if (!song && !title) throw spotifyError('Could not read this song from Spotify', 'spotify_error', 502);
+  if (song) {
+    const q = `${artist} ${song.title}`.trim();
+    return { ...song, artist, searchQuery: q, url: `https://www.youtube.com/results?search_query=${encodeURIComponent(q)}` };
+  }
+  return spotifySong({ id, name: title, artists: artist ? [{ name: artist }] : [], coverArt: { sources: meta('og:image') ? [{ url: meta('og:image') }] : [] } });
+}
+function spotifyAppKeys() {
+  try { const k = globalThis.__murielVault('spotify_app').read(); return k && k.id && k.secret ? k : null; } catch (e) { return null; }
+}
+let spotifyAppToken = null;
+let spotifyAppTokenBusy = null;
+function spotifyAppTokenFor(keys, fresh) {
+  const who = `${keys.id}:${keys.secret}`;
+  if (!fresh && spotifyAppToken && spotifyAppToken.for === who && Date.now() < spotifyAppToken.until - 60000) return Promise.resolve(spotifyAppToken.value);
+  if (spotifyAppTokenBusy && spotifyAppTokenBusy.for === who) return spotifyAppTokenBusy.promise;
+  const promise = (async () => {
+    const r = await globalThis.__murielFetch('https://accounts.spotify.com/api/token', {
+      method: 'POST',
+      headers: { Authorization: `Basic ${Buffer.from(who).toString('base64')}`, 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: 'grant_type=client_credentials',
+    });
+    if (r.status === 400 || r.status === 401) throw spotifyError('Spotify didn’t accept these keys', 'spotify_bad_keys', 401);
+    if (!r.ok) throw spotifyError(`Spotify returned status ${r.status}`, 'spotify_error', 502);
+    const d = await r.json();
+    spotifyAppToken = { for: who, value: d.access_token, until: Date.now() + (Number(d.expires_in) || 3600) * 1000 };
+    return d.access_token;
+  })().finally(() => { spotifyAppTokenBusy = null; });
+  spotifyAppTokenBusy = { for: who, promise };
+  return promise;
+}
+async function spotifyAppApi(keys, url) {
+  let token = await spotifyAppTokenFor(keys, false);
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const r = await globalThis.__murielFetch(url, { headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' } });
+    if (r.ok) return r.json();
+    if (r.status === 401 && attempt === 0) { token = await spotifyAppTokenFor(keys, true); continue; }
+    if (r.status === 403) throw spotifyError('Spotify refused this. The account that made the app needs Premium.', 'spotify_forbidden', 403);
+    if (r.status === 429) throw spotifyError('Spotify is limiting searches right now. Try again in a minute.', 'spotify_rate_limited', 429);
+    throw spotifyError(`Spotify returned status ${r.status}`, 'spotify_error', 502);
+  }
+  throw spotifyError('Spotify didn’t accept these keys', 'spotify_bad_keys', 401);
+}
+async function spotifySearchSongs(query, limit) {
+  const keys = spotifyAppKeys();
+  if (!keys) throw spotifyError('Spotify search needs your developer key', 'spotify_needs_keys', 400);
+  const pages = await Promise.all((limit > 10 ? [0, 10] : [0]).map((offset, i) =>
+    spotifyAppApi(keys, `https://api.spotify.com/v1/search?type=track&limit=10&offset=${offset}&q=${encodeURIComponent(query)}`)
+      .catch((e) => { if (i === 0) throw e; return null; })));
+  const seen = new Set();
+  const out = [];
+  for (const page of pages) {
+    for (const item of (page && page.tracks && page.tracks.items) || []) {
+      const song = item && spotifySong(item);
+      if (song && !seen.has(song.id)) { seen.add(song.id); out.push(song); }
+    }
+  }
+  return out.slice(0, limit);
+}
+async function spotifyOneSong(id) {
+  const keys = spotifyAppKeys();
+  if (keys) {
+    try { const song = spotifySong(await spotifyAppApi(keys, `https://api.spotify.com/v1/tracks/${id}`)); if (song) return song; } catch (e) {}
+  }
+  return spotifySongFromEmbed(id);
+}
+async function handleSpotifySearch(res, query, limit, songId) {
+  const cacheKey = `spotify:${songId || query}:${limit}`;
+  const cached = searchCache.get(cacheKey);
+  if (cached && cached.success) { res.writeHead(200, { 'Content-Type': 'application/json' }); return res.end(JSON.stringify(cached)); }
+  try {
+    const tracks = songId ? [await spotifyOneSong(songId)] : await spotifySearchSongs(query, limit);
+    const body = { success: true, tracks };
+    cacheSearchResult(cacheKey, body);
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify(body));
+  } catch (e) {
+    res.writeHead(e.status || 502, { 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ success: false, code: e.code || 'spotify_error', error: e.message }));
+  }
+}
+
 async function handleSearch(req, res, query, platform = 'youtube', limit = 20) {
+  const spotifySongId = spotifyTrackIdFromLink(query);
+  if (spotifySongId || platform === 'spotify') return handleSpotifySearch(res, query, limit, spotifySongId);
   const cacheKey = `${platform}:${query}:${limit}`;
   while (true) {
     const cached = searchCache.get(cacheKey);
@@ -4061,7 +4187,19 @@ function fetchSpotifyEmbed(playlistId, ua) {
 }
 
 async function handleSpotifyImport(req, res, inputUrl) {
-  const m = (inputUrl || '').match(/^(?:(?:https:\/\/)?open\.spotify\.com\/(?:embed\/)?playlist\/|spotify:playlist:)([a-zA-Z0-9]{22})(?:[/?#]|$)/);
+  // a song link: that one song (the page adds it to a "Spotify songs" playlist)
+  const songId = spotifyTrackIdFromLink(inputUrl);
+  if (songId) {
+    try {
+      const s = await spotifyOneSong(songId);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify({ success: true, single: true, name: s.title, cover: s.thumbnail, tracks: [{ title: s.title, artist: s.artist, duration: s.duration, thumbnail: s.thumbnail }], total: 1 }));
+    } catch (e) {
+      res.writeHead(e.status || 502, { 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify({ success: false, code: e.code || 'spotify_error', error: e.message }));
+    }
+  }
+  const m =(inputUrl || '').match(/^(?:(?:https:\/\/)?open\.spotify\.com\/(?:embed\/)?playlist\/|spotify:playlist:)([a-zA-Z0-9]{22})(?:[/?#]|$)/);
   if (!m) {
     res.writeHead(400, { 'Content-Type': 'application/json' });
     return res.end(JSON.stringify({ success: false, code: 'spotify_error', error: 'Invalid Spotify playlist URL' }));
@@ -4649,6 +4787,9 @@ function clearStoredSpotifyAuth() {
 }
 
 function getSpotifyRedirectUri() {
+  // Sine for PC: the same address as the iPhone app, so one Spotify app setting works for both. Windows hands
+  // muriel:// links to Sine, and the page passes the callback on to this server (extras.js).
+  if (process.env.SINE_SPOTIFY_REDIRECT) return process.env.SINE_SPOTIFY_REDIRECT;
   const a = server.address();
   const port = (a && typeof a === 'object' && a.port) ? a.port : PORT;
   return `http://127.0.0.1:${port}/api/spotify-callback`;
@@ -4856,7 +4997,7 @@ async function handleSpotifyLibrary(req, res, query) {
         if (resp.status < 200 || resp.status >= 300) throw spotifyApiFailure(resp, `playlist items (${pl.name})`);
 
         const pageData = JSON.parse(resp.body);
-        if (!Array.isArray(pageData.items)) throw new Error(`Invalid Spotify playlist items (${pl.name}) response`);
+        if (!Array.isArray(pageData.items)) { skippedPlaylists.push({ name: pl.name, error: "Spotify doesn't share this playlist's songs" }); continue; }
         const pageItems = pageData.items;
         for (const it of pageItems) {
           const t = it?.item || it?.track;
@@ -6494,6 +6635,24 @@ const server = http.createServer(guardHandler(async (req, res) => {
 
   if (parsedUrl.pathname === '/api/spotify-library') {
     return handleSpotifyLibrary(req, res, parsedUrl.query);
+  }
+
+  // Spotify playlists in search results (with the listener's own developer keys), as on the iPhone
+  if (parsedUrl.pathname === '/api/spotify-playlists') {
+    try {
+      const keys = spotifyAppKeys();
+      if (!keys) throw spotifyError('Spotify search needs your developer key', 'spotify_needs_keys', 400);
+      const d = await spotifyAppApi(keys, `https://api.spotify.com/v1/search?type=playlist&limit=10&q=${encodeURIComponent(parsedUrl.query.q || '')}`);
+      const playlists = ((d && d.playlists && d.playlists.items) || []).filter((p) => p && p.id && p.name).map((p) => ({
+        id: p.id, name: p.name, owner: (p.owner && p.owner.display_name) || '', cover: (p.images && p.images[0] && p.images[0].url) || '',
+        total: (p.items && p.items.total) || (p.tracks && p.tracks.total) || 0, url: `https://open.spotify.com/playlist/${p.id}`,
+      }));
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify({ success: true, playlists }));
+    } catch (e) {
+      res.writeHead(e.status || 502, { 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify({ success: false, code: e.code || '', error: e.message }));
+    }
   }
 
   if (parsedUrl.pathname === '/api/search') {
