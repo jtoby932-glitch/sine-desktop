@@ -5,6 +5,9 @@ on:
     branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   windows:
     runs-on: windows-latest
@@ -43,6 +46,23 @@ jobs:
           name: Sine-Setup
           path: dist/Sine-Setup-*.exe
           if-no-files-found: error
+
+      # the installer as a plain .exe on the repo's Releases page (private, like the repo), only once it has passed
+      - name: Put the installer on the Releases page
+        if: github.ref == 'refs/heads/main'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          v=$(node -p "require('./package.json').version")
+          f="dist/Sine-Setup-$v.exe"
+          notes="Sine $v for Windows. Run the installer; Windows may say it doesn't recognise the app (it isn't code-signed): More info, then Run anyway. Built and checked on Windows by run ${{ github.run_id }} (commit ${GITHUB_SHA:0:7})."
+          if gh release view "v$v" >/dev/null 2>&1; then
+            gh release upload "v$v" "$f" --clobber
+            gh release edit "v$v" --notes "$notes"
+          else
+            gh release create "v$v" "$f" --target "$GITHUB_SHA" --title "Sine $v for PC" --notes "$notes"
+          fi
 
       - uses: actions/upload-artifact@v4
         if: always()
