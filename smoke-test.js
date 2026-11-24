@@ -72,6 +72,9 @@ module.exports = async function smokeTest({ app, win, serverPort, serverToken })
     check('server is listening', serverPort > 0, serverPort);
     const lib = await api('/api/library').catch((e) => ({ error: e.message }));
     check('server answers', lib && !lib.error, JSON.stringify(lib).slice(0, 120));
+    // ffmpeg comes with the app (downloads in MP3 and the other formats)
+    const ffmpeg = require('./server/platform').resolveBinary('ffmpeg');
+    check('ffmpeg is bundled', ffmpeg && /app\.asar\.unpacked|ffmpeg-static/.test(ffmpeg), ffmpeg);
 
     await new Promise((resolve) => (win.webContents.isLoading() ? win.webContents.once('did-finish-load', resolve) : resolve()));
     const ready = await win.webContents.executeJavaScript(`new Promise((resolve) => {

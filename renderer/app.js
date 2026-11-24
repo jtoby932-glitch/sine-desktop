@@ -16835,7 +16835,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             eq: { ...(state.audioSettings.eq || {}) },
             eqBands: Array.isArray(state.audioSettings.eqBands) ? [...state.audioSettings.eqBands] : [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
           };
-          finalBuffer = await audioEngine.renderOffline(bufferToProcess, currentSettings);
+          const sineFx = document.documentElement.classList.contains('is-desktop') && window.MurielPhoneFx;
+          if (sineFx) { const s = sineFx.current(t); finalBuffer = sineFx.isActive(s) ? await sineFx.render(bufferToProcess, s, sineFx.detectCutoff(bufferToProcess)) : bufferToProcess; }
+          else finalBuffer = await audioEngine.renderOffline(bufferToProcess, currentSettings);
         }
 
         if (downloadAbort?.signal?.aborted) throw new DOMException('Aborted', 'AbortError');

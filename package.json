@@ -12,7 +12,8 @@
     "dist": "electron-builder --win nsis --x64 --publish never"
   },
   "dependencies": {
-    "youtubei.js": "^18.1.0"
+    "youtubei.js": "^18.1.0",
+    "ffmpeg-static": "^5.2.0"
   },
   "devDependencies": {
     "electron": "^39.0.0",
@@ -22,7 +23,10 @@
     "appId": "io.github.sine.desktop",
     "productName": "Sine",
     "copyright": "Sine",
-    "directories": { "output": "dist", "buildResources": "build" },
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
     "files": [
       "main.js",
       "preload.js",
@@ -34,7 +38,14 @@
     ],
     "asar": true,
     "win": {
-      "target": [{ "target": "nsis", "arch": ["x64"] }],
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
       "icon": "build/icon.ico"
     },
     "nsis": {
@@ -47,6 +58,9 @@
       "installerIcon": "build/icon.ico",
       "uninstallerIcon": "build/icon.ico",
       "runAfterFinish": true
-    }
+    },
+    "asarUnpack": [
+      "node_modules/ffmpeg-static/**"
+    ]
   }
 }

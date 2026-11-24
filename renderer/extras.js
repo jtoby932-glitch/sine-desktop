@@ -1277,7 +1277,7 @@
     sh.body.querySelector('[data-act="invite"]').addEventListener('click', async () => {
       const api2 = window.electronAPI;
       const text = `Listen along with me on Sine. Code: ${code.toUpperCase()} ${link}`;
-      if (api2 && api2.shareText) await api2.shareText('Listen together', text);
+      if (api2 && api2.shareText) { if (await api2.shareText('Listen together', text) === 'copied') toast('Invite copied', 'success'); }
       else { try { await navigator.clipboard.writeText(text); toast('Invite copied', 'success'); } catch (e) { toast("Couldn't copy it. Read out the code instead", 'info'); } }
     });
     peer.on('connection', (c) => {

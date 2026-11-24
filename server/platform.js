@@ -100,9 +100,22 @@ function findInPath(name) {
   return null;
 }
 
-// ffmpeg is optional (Sine works without it, like on iPhone): used when it's on the PC already
+// ffmpeg comes with Sine for PC (ffmpeg-static, unpacked next to the app): downloads in MP3, FLAC, M4A, Opus or WAV
+// and covers of your own files need it. One on the PC's PATH is the fallback.
+let bundledFfmpeg;
+function findBundledFfmpeg() {
+  if (bundledFfmpeg !== undefined) return bundledFfmpeg;
+  bundledFfmpeg = null;
+  try {
+    const p = require('ffmpeg-static');
+    const real = p && p.replace(`app.asar${path.sep}`, `app.asar.unpacked${path.sep}`);
+    if (real && fs.existsSync(real)) bundledFfmpeg = real;
+  } catch (e) {}
+  return bundledFfmpeg;
+}
 function resolveBinary(name) {
   if (name === 'yt-dlp') return 'yt-dlp';
+  if (name === 'ffmpeg') return findBundledFfmpeg() || findInPath(name);
   return findInPath(name);
 }
 

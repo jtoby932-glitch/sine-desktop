@@ -16,8 +16,8 @@ html.is-desktop .audio-panel[data-audio-panel="effects"],
 html.is-desktop .audio-panel[data-audio-panel="eq"],
 html.is-desktop #btn-toggle-presets-drawer { display: none !important; }
 
-/* the visualizers drew from that engine too; and the download's trim needs ffmpeg, which Sine doesn't bring */
-html.is-desktop :is(#visualizer-container, #mini-visualizer, #setting-bar-viz-pos, #setting-bar-viz-opacity, #setting-viz-connected, #download-trim-section, .playbar-bg-visualizer) { display: none !important; }
+/* the visualizers drew from that engine too (Sine's own visualizer stays) */
+html.is-desktop :is(#visualizer-container, #mini-visualizer, #setting-bar-viz-pos, #setting-bar-viz-opacity, #setting-viz-connected, .playbar-bg-visualizer) { display: none !important; }
 html.is-desktop .tvk-row:has(#btn-tvk-viz-connected) { display: none !important; }
 
 /* Sine's sound panel is long (speed, profiles, equalizer, upscaler, effects): a taller card on a PC screen */

@@ -313,7 +313,7 @@
   async function share(st) {
     const text = shareText(st);
     const api = window.electronAPI;
-    if (api && api.shareText) { await api.shareText(I18n.T('My Sine Encore'), text); return; }
+    if (api && api.shareText) { if (await api.shareText(I18n.T('My Sine Encore'), text) === 'copied' && window.MurielCore) window.MurielCore.toast(I18n.Tm('Copied your Encore')); return; }
     if (navigator.share) { try { await navigator.share({ title: I18n.T('My Sine Encore'), text }); return; } catch (e) { if (e && e.name === 'AbortError') return; } }
     try { await navigator.clipboard.writeText(text); if (window.MurielCore) window.MurielCore.toast(I18n.Tm('Copied your Encore')); } catch (e) {}
   }

@@ -90,4 +90,21 @@ edit('extras.js', [
     ("Then tap Log in below. Safari opens, you approve, and it comes back here.",
      "${document.documentElement.classList.contains('is-desktop') ? 'Then click Log in below. Your browser opens; approve, and when the browser asks to open Sine, allow it.' : 'Then tap Log in below. Safari opens, you approve, and it comes back here.'}"),
 ])
+# downloads with "Apply current audio effects": Sine's own sound engine renders them on the PC (the original
+# desktop engine is switched off, so its settings were all defaults)
+edit('app.js', [
+    ("          finalBuffer = await audioEngine.renderOffline(bufferToProcess, currentSettings);",
+     "          const sineFx = document.documentElement.classList.contains('is-desktop') && window.MurielPhoneFx;\n"
+     "          if (sineFx) { const s = sineFx.current(t); finalBuffer = sineFx.isActive(s) ? await sineFx.render(bufferToProcess, s, sineFx.detectCutoff(bufferToProcess)) : bufferToProcess; }\n"
+     "          else finalBuffer = await audioEngine.renderOffline(bufferToProcess, currentSettings);"),
+])
+# a PC "shares" by copying to the clipboard: say so where the page didn't
+edit('extras.js', [
+    ("      if (api2 && api2.shareText) await api2.shareText('Listen together', text);",
+     "      if (api2 && api2.shareText) { if (await api2.shareText('Listen together', text) === 'copied') toast('Invite copied', 'success'); }"),
+])
+edit('encore.js', [
+    ("    if (api && api.shareText) { await api.shareText(I18n.T('My Sine Encore'), text); return; }",
+     "    if (api && api.shareText) { if (await api.shareText(I18n.T('My Sine Encore'), text) === 'copied' && window.MurielCore) window.MurielCore.toast(I18n.Tm('Copied your Encore')); return; }"),
+])
 print('renderer ready:', dst)
