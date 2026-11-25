@@ -370,7 +370,14 @@ app.on('child-process-gone', (e, d) => {
   console.error('[sine]', msg);
   if (logger) logger.log('error', msg);
   globalThis.__sineLastGpuCrash = d.type === 'GPU' ? msg : globalThis.__sineLastGpuCrash;
+  // a graphics driver that keeps crashing: Sine starts without hardware acceleration next time (Settings → Advanced
+  // turns it back on)
+  if (d.type === 'GPU' && d.reason !== 'clean-exit' && !SMOKE) {
+    gpuCrashes += 1;
+    if (gpuCrashes >= 2 && readSettings().hwAccel !== false) { writeSettings({ hwAccel: false }); if (logger) logger.log('warn', 'graphics crashed twice: hardware acceleration off from the next start'); }
+  }
 });
+let gpuCrashes = 0;
 app.on('second-instance', (e, argv) => { showWindow(); deliverLink(linkIn(argv)); });
 app.on('open-url', (e, url) => { e.preventDefault(); showWindow(); deliverLink(url); });
 app.on('before-quit', () => { quitting = true; });

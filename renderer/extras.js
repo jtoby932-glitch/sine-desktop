@@ -1156,6 +1156,8 @@
 
   // ---- what's new, and a notice when a new file is ready ----
   const WHATS_NEW = document.documentElement.classList.contains('is-desktop') ? [
+    'Fixed: the visualizer no longer runs behind the progress bar',
+    'If the page or graphics ever crash, Sine comes straight back and notes why in its log',
     'Spotify song links work, in Import and pasted into search',
     'Log in to Spotify on the PC with the same Redirect URI as your iPhone (muriel://spotify-callback)',
     'Search Spotify with your own developer key (Settings, Integrations)',

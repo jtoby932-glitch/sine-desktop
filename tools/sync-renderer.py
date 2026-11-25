@@ -114,6 +114,8 @@ edit('build-info.js', [(re.compile(r'"version": "[^"]*"'), f'"version": "{pc_ver
 edit('extras.js', [
     ("  const WHATS_NEW = [\n",
      "  const WHATS_NEW = document.documentElement.classList.contains('is-desktop') ? [\n"
+     "    'Fixed: the visualizer no longer runs behind the progress bar',\n"
+     "    'If the page or graphics ever crash, Sine comes straight back and notes why in its log',\n"
      "    'Spotify song links work, in Import and pasted into search',\n"
      "    'Log in to Spotify on the PC with the same Redirect URI as your iPhone (muriel://spotify-callback)',\n"
      "    'Search Spotify with your own developer key (Settings, Integrations)',\n"
