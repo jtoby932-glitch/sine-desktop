@@ -433,7 +433,7 @@
   // ---- first launch: the things you can't see until you know ----
   const WELCOME_KEY = 'nocturne_welcome_v2';
   const DESKTOP_TIPS = `
-        <li><b>Keyboard</b>: Space plays and pauses. Ctrl + ← → skips, Ctrl + ↑ ↓ changes the volume, Shift + ← → jumps 5 seconds, M mutes, Ctrl + K searches.</li>
+        <li><b>Keyboard</b>: Space plays and pauses. Ctrl + ← → skips, Ctrl + ↑ ↓ changes the volume, Shift + ← → jumps 5 seconds, M mutes, / jumps to search, Ctrl + K opens quick commands.</li>
         <li><b>Sound</b>: equalizer, moods, upscaler and effects are in the Audio button at the bottom right. Changes are instant. Hold Compare to hear the difference.</li>
         <li><b>Mini player</b>: the small-window button at the top right keeps Sine on top of everything else.</li>
         <li><b>Sliders</b>: click or drag anywhere on one. Double-click an equalizer slider to set it back to 0.</li>

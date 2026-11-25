@@ -144,6 +144,34 @@ module.exports = async function smokeTest({ app, win, serverPort, serverToken })
       return finish(out.checks.every((c) => c.ok) ? 0 : 1);
     }
 
+    // the PC's own functions, through the page's bridge (window, settings, folders, secrets)
+    const ipc = await page(`(async () => {
+      const a = window.electronAPI, r = {};
+      const t = async (name, f) => { try { const v = await f(); r[name] = v === undefined ? 'ok' : (typeof v === 'object' ? JSON.stringify(v).slice(0, 80) : String(v).slice(0, 80)); } catch (e) { r[name] = 'THREW ' + (e && e.message); } };
+      await t('version', () => a.getAppVersion());
+      await t('zoom', async () => { await a.setZoomFactor(1); return a.getZoomFactor(); });
+      await t('hwAccel', () => a.getHwAccel());
+      await t('gpu', () => a.getGpuCompositing());
+      await t('cacheSize', () => a.getCacheSize());
+      await t('dataDir', () => a.getDataDir());
+      await t('downloadDir', () => a.getDownloadDir());
+      await t('diagnostics', async () => (await a.getDiagnostics()).split('\\n')[0]);
+      await t('mediaKeys', async () => { await a.setMediaKeys(true); return a.mediaKeysActive(); });
+      await t('trayOnClose', () => a.setTrayOnClose(false));
+      await t('vault', () => { a.vaultWrite('smoke', { x: 1 }); const v = a.vaultRead('smoke'); a.vaultWrite('smoke', null); const gone = a.vaultRead('smoke'); return v.ok && v.value.x === 1 && !gone.ok ? 'ok' : 'BAD ' + JSON.stringify([v, gone]); });
+      await t('quality', () => a.setQuality('veryhigh'));
+      await t('trimMemory', () => a.trimMemory());
+      await t('miniOn', async () => { await a.toggleMiniWindow(); await new Promise((ok) => setTimeout(ok, 700)); return innerWidth + 'x' + innerHeight + ' mini=' + document.body.classList.contains('mini'); });
+      await t('miniOff', async () => { await a.toggleMiniWindow(); await new Promise((ok) => setTimeout(ok, 700)); return innerWidth + 'x' + innerHeight; });
+      await t('maximize', async () => { await a.maximizeWindow(); await new Promise((ok) => setTimeout(ok, 500)); await a.maximizeWindow(); return 'ok'; });
+      return r;
+    })()`).catch((e) => ({ error: e.message }));
+    out.ipc = ipc;
+    console.log('ipc:', JSON.stringify(ipc));
+    const ipcBad = Object.entries(ipc).filter(([, v]) => /^THREW|^BAD/.test(String(v)) || String(v) === 'undefined');
+    check('PC functions answer', !ipc.error && ipcBad.length === 0, JSON.stringify(ipcBad.length ? ipcBad : ipc.error || ''));
+    check('mini player resizes the window', /^400x132 mini=true/.test(ipc.miniOn || '') && !/^400x/.test(ipc.miniOff || ''), `${ipc.miniOn} / ${ipc.miniOff}`);
+
     // the real internet
     const search = await api('/api/search?q=' + encodeURIComponent('Rick Astley Never Gonna Give You Up')).catch((e) => ({ error: e.message }));
     const tracks = (search && search.tracks) || [];

@@ -75,3 +75,6 @@ html.is-desktop .settings-nav { scrollbar-width: thin; scrollbar-color: color-mi
 
 /* Sine's visualizer stays in Now Playing; behind the player bar it ran through the progress bar and the time */
 html.is-desktop #nf-cava-mini { display: none !important; }
+
+/* menus are solid on the PC: the see-through background let the page's text show through the items */
+html.is-desktop .track-context-menu { background: var(--md-sys-color-surface-container-highest-solid, #26262e); backdrop-filter: none; }
