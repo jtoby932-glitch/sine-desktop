@@ -131,6 +131,20 @@ function createWindow() {
   });
   if (readSettings().maximized) win.maximize();
   win.webContents.on('did-start-loading', () => { pageReady = false; });
+  // if the page's process dies (out of memory, a Chromium crash), say why in the log and bring the page back
+  // instead of leaving a blank window
+  let lastGone = 0;
+  win.webContents.on('render-process-gone', (e, d) => {
+    const msg = `page process gone: ${d.reason} (exit ${d.exitCode})`;
+    console.error('[sine]', msg);
+    if (logger) logger.log('error', msg);
+    globalThis.__sineLastCrash = msg;
+    if (SMOKE || quitting || !win || win.isDestroyed()) return;
+    const now = Date.now();
+    if (now - lastGone > 30000) setTimeout(() => { if (win && !win.isDestroyed()) win.webContents.reload(); }, 400);
+    lastGone = now;
+  });
+  win.webContents.on('unresponsive', () => { if (logger) logger.log('warn', 'page unresponsive'); });
   win.loadFile(path.join(__dirname, 'renderer', 'index.html'));
   win.once('ready-to-show', () => win.show());
 
@@ -351,6 +365,12 @@ handle('downloads:set-dir', (dir) => ({ success: !!platform.setDownloadDir(dir) 
 handle('downloads:reset-dir', () => ({ success: !!platform.setDownloadDir(null) }));
 
 // ---- start ----
+app.on('child-process-gone', (e, d) => {
+  const msg = `${d.type} process gone: ${d.reason} (exit ${d.exitCode})${d.name ? ' ' + d.name : ''}`;
+  console.error('[sine]', msg);
+  if (logger) logger.log('error', msg);
+  globalThis.__sineLastGpuCrash = d.type === 'GPU' ? msg : globalThis.__sineLastGpuCrash;
+});
 app.on('second-instance', (e, argv) => { showWindow(); deliverLink(linkIn(argv)); });
 app.on('open-url', (e, url) => { e.preventDefault(); showWindow(); deliverLink(url); });
 app.on('before-quit', () => { quitting = true; });

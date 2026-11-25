@@ -15,6 +15,43 @@ module.exports = async function smokeTest({ app, win, serverPort, serverToken })
       await new Promise((r) => setTimeout(r, every));
     }
   };
+  // changing every control in the Audio panel, fast, while the song plays (people trying things out): the page
+  // must not die, and the song must still be playing afterwards
+  let gone = null;
+  win.webContents.on('render-process-gone', (e, d) => { gone = `${d.reason} (exit ${d.exitCode})`; });
+  async function fxStress() {
+    const r = { rounds: [] };
+    const script = `(async () => {
+      document.getElementById('btn-open-settings').click();
+      await new Promise((ok) => setTimeout(ok, 800));
+      const p = document.querySelector('.audio-panel[data-audio-panel="tempo"]');
+      const ctl = [...p.querySelectorAll('input[type=range], button, input[type=checkbox]')].filter((e) => !/reset|save|delete|remove|export|import/i.test((e.textContent || '') + (e.title || '')));
+      let n = 0;
+      for (const e of ctl) {
+        const b = e.getBoundingClientRect(); e.scrollIntoView({ block: 'center' });
+        if (!e.offsetParent) continue;
+        if (e.type === 'range') { const min = +e.min || 0, max = +e.max || 100; e.value = String(min + Math.random() * (max - min)); e.dispatchEvent(new Event('input', { bubbles: true })); e.dispatchEvent(new Event('change', { bubbles: true })); }
+        else e.click();
+        n++;
+        await new Promise((ok) => setTimeout(ok, 40 + Math.random() * 160));
+      }
+      return { n, t: MurielCore.audio.currentTime, paused: MurielCore.audio.paused, fx: MurielPhoneFx.getStatus().kind };
+    })()`;
+    for (let i = 0; i < 3 && !gone; i++) {
+      const res = await Promise.race([page(script).catch((e) => ({ error: String(e.message || e).slice(0, 200) })), new Promise((ok) => setTimeout(() => ok({ error: 'no answer in 60 s' }), 60000))]);
+      r.rounds.push(res);
+      await new Promise((ok) => setTimeout(ok, 1500));
+    }
+    if (!gone) await new Promise((ok) => setTimeout(ok, 12000));
+    r.after = gone ? null : await page(`({ t: MurielCore.audio.currentTime, paused: MurielCore.audio.paused, fx: MurielPhoneFx.getStatus().kind, rendered: MurielPhoneFx.isPlayingRendered(), mb: performance.memory ? Math.round(performance.memory.usedJSHeapSize / 1e6) : 0 })`).catch((e) => ({ error: e.message }));
+    r.pageGone = gone;
+    r.gpuGone = globalThis.__sineLastGpuCrash || null;
+    check('sound settings: page survives', !gone, gone || '');
+    check('sound settings: song still playing', r.after && !r.after.paused && r.after.t > 0, JSON.stringify(r.after));
+    console.log('fx stress:', JSON.stringify(r));
+    return r;
+  }
+
   // host: shows a code, waits for the other copy, adds a playlist and checks it arrives there (the other copy
   // reports that); join: enters the code and waits for the playlist
   async function syncTest(role) {
@@ -75,7 +112,7 @@ module.exports = async function smokeTest({ app, win, serverPort, serverToken })
     try { if (process.env.SINE_SMOKE_OUT) fs.writeFileSync(process.env.SINE_SMOKE_OUT, JSON.stringify({ ...out, pageErrors }, null, 2)); } catch (e) {}
     setTimeout(() => app.exit(code), 200);
   };
-  const timer = setTimeout(() => { check('finished in time', false); finish(1); }, process.env.SINE_SYNC_ROLE ? 280000 : 150000);
+  const timer = setTimeout(() => { check('finished in time', false); finish(1); }, process.env.SINE_SYNC_ROLE ? 280000 : 420000);
   try {
     check('server is listening', serverPort > 0, serverPort);
     const lib = await api('/api/library').catch((e) => ({ error: e.message }));
@@ -134,6 +171,7 @@ module.exports = async function smokeTest({ app, win, serverPort, serverToken })
           })();
         })`);
         out.play = played;
+        if (played && played.ok) out.fx = await fxStress();
       }
       console.log('stream:', JSON.stringify(out.stream), 'play:', JSON.stringify(out.play || null));
     }

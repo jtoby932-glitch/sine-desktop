@@ -72,3 +72,6 @@ html.is-desktop :is(#tools-row, #setting-airpods, #settings-nav [data-cat="plugi
 }
 /* a scrollbar you can see when the list doesn't fit (it scrolled invisibly before) */
 html.is-desktop .settings-nav { scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--md-sys-color-on-surface) 25%, transparent) transparent; }
+
+/* Sine's visualizer stays in Now Playing; behind the player bar it ran through the progress bar and the time */
+html.is-desktop #nf-cava-mini { display: none !important; }
