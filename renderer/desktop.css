@@ -81,3 +81,8 @@ html.is-desktop body.mini #nf-cava-mini { display: none !important; }
 
 /* menus are solid on the PC: the see-through background let the page's text show through the items */
 html.is-desktop .track-context-menu { background: var(--md-sys-color-surface-container-highest-solid, #26262e); backdrop-filter: none; }
+
+/* the Audio panel: no live blur behind it (redrawing a full-window blur on every slider movement is heavy work for
+   the graphics card), a plain dimmed backdrop and a solid card instead */
+html.is-desktop #audio-settings-modal { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; background: rgba(0, 0, 0, 0.55); }
+html.is-desktop #audio-settings-modal .audio-menu-card { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; background: var(--md-sys-color-surface-container-solid, var(--md-sys-color-surface-container-highest-solid, #1c1c22)); }

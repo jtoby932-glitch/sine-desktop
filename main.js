@@ -45,6 +45,9 @@ function writeSettings(patch) {
   return next;
 }
 if (readSettings().hwAccel === false) app.disableHardwareAcceleration();
+// a graphics driver crash must not take Sine down with it: Chromium restarts the graphics process (by default
+// Electron quits after a few crashes)
+app.commandLine.appendSwitch('disable-gpu-process-crash-limit');
 
 // ---- the in-app server ----
 // requests from server.js and its YouTube/SoundCloud client: Node's own networking, with a deadline so one
@@ -374,7 +377,12 @@ app.on('child-process-gone', (e, d) => {
   // turns it back on)
   if (d.type === 'GPU' && d.reason !== 'clean-exit' && !SMOKE) {
     gpuCrashes += 1;
-    if (gpuCrashes >= 2 && readSettings().hwAccel !== false) { writeSettings({ hwAccel: false }); if (logger) logger.log('warn', 'graphics crashed twice: hardware acceleration off from the next start'); }
+    if (gpuCrashes >= 2 && readSettings().hwAccel !== false && app.isHardwareAccelerationEnabled()) {
+      writeSettings({ hwAccel: false });
+      if (logger) logger.log('warn', 'graphics crashed twice: restarting Sine without hardware acceleration');
+      // straight away, so it stops crashing now (Settings → Advanced turns it back on)
+      setTimeout(() => { quitting = true; app.relaunch(); app.exit(0); }, 300);
+    }
   }
 });
 let gpuCrashes = 0;

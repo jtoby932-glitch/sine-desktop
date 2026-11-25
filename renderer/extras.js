@@ -1156,6 +1156,8 @@
 
   // ---- what's new, and a notice when a new file is ready ----
   const WHATS_NEW = document.documentElement.classList.contains('is-desktop') ? [
+    'A graphics driver crash no longer closes Sine; if it keeps happening Sine restarts without hardware acceleration',
+    'The Audio panel is lighter to draw (no live blur behind it)',
     'Fixed: dragging the sound sliders quickly while a song plays could crash Sine',
     'The player bar visualizer is back, behind the controls on the right, clear of the progress bar',
     'Song menus are solid, so the page no longer shows through them',
