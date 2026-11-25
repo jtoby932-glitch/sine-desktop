@@ -140,6 +140,36 @@
     return removeAttr.call(this, name);
   };
 
+  // ---- sliders in the Audio panel: a fast drag reaches the sound engine at most ~12 times a second ----
+  // A mouse drag sends an input event every frame; each one used to re-run the whole chain (app settings, Sine's
+  // sound engine, saving, redrawing the panel), and sliding fast while a song played could crash Sine. The slider
+  // itself still follows the mouse; the sound gets the latest position, and the final one as soon as you let go.
+  const SLIDER_GAP = 80;
+  const held = new Map(); // slider → { timer, at }
+  const pass = new WeakSet();
+  const send = (el) => {
+    const h = held.get(el);
+    if (h) { clearTimeout(h.timer); h.timer = null; h.at = performance.now(); }
+    const ev = new Event('input', { bubbles: true });
+    pass.add(ev);
+    el.dispatchEvent(ev);
+  };
+  document.addEventListener('input', (e) => {
+    const el = e.target;
+    if (pass.has(e) || !(el instanceof HTMLInputElement) || el.type !== 'range' || !el.closest('#audio-settings-modal, .audio-menu-card')) return;
+    let h = held.get(el);
+    if (!h) { h = { timer: null, at: 0 }; held.set(el, h); }
+    const since = performance.now() - h.at;
+    if (since >= SLIDER_GAP && !h.timer) { h.at = performance.now(); return; } // goes straight through
+    e.stopImmediatePropagation();
+    if (!h.timer) h.timer = setTimeout(() => send(el), Math.max(0, SLIDER_GAP - since));
+  }, true);
+  document.addEventListener('change', (e) => {
+    const el = e.target;
+    const h = el && held.get(el);
+    if (h && h.timer) send(el); // let go: the final position now, before the change itself
+  }, true);
+
   // ---- Sine's player-bar visualizer: behind the right-hand controls, clear of the progress bar ----
   document.addEventListener('DOMContentLoaded', () => {
     const move = () => {

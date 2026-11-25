@@ -1,1 +1,1 @@
-window.MURIEL_BUILD = {"sha": "dev", "version": "2.10.9", "run": 97, "repo": "cloverscripts/riff-muriel", "builtAt": "2026-11-04T23:40:00.000Z", "channel": ""};
+window.MURIEL_BUILD = {"sha": "dev", "version": "2.10.10", "run": 97, "repo": "cloverscripts/riff-muriel", "builtAt": "2026-11-04T23:40:00.000Z", "channel": ""};

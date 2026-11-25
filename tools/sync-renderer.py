@@ -116,7 +116,7 @@ edit('extras.js', [
      "  const WHATS_NEW = document.documentElement.classList.contains('is-desktop') ? [\n"
      "    'A graphics driver crash no longer closes Sine; if it keeps happening Sine restarts without hardware acceleration',\n"
      "    'The Audio panel is lighter to draw (no live blur behind it)',\n"
-     "    'Fixed: dragging the sound sliders quickly while a song plays could crash Sine',\n"
+     "    'Fixed: sliding the sound sliders fast no longer floods the sound engine (it hears the slider about 12 times a second, and where you let go)',\n"
      "    'The player bar visualizer is back, behind the controls on the right, clear of the progress bar',\n"
      "    'Song menus are solid, so the page no longer shows through them',\n"
      "    'Fixed: the visualizer no longer runs behind the progress bar',\n"
