@@ -73,8 +73,11 @@ html.is-desktop :is(#tools-row, #setting-airpods, #settings-nav [data-cat="plugi
 /* a scrollbar you can see when the list doesn't fit (it scrolled invisibly before) */
 html.is-desktop .settings-nav { scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--md-sys-color-on-surface) 25%, transparent) transparent; }
 
-/* Sine's visualizer stays in Now Playing; behind the player bar it ran through the progress bar and the time */
-html.is-desktop #nf-cava-mini { display: none !important; }
+/* Sine's visualizer in the player bar sits behind the right-hand controls only (desktop.js moves it there): across
+   the whole bar it ran through the progress bar and the time */
+html.is-desktop .playbar-right { position: relative; isolation: isolate; }
+html.is-desktop .playbar-right > #nf-cava-mini { inset: -6px -8px; width: calc(100% + 16px); height: calc(100% + 12px); border-radius: 14px; }
+html.is-desktop body.mini #nf-cava-mini { display: none !important; }
 
 /* menus are solid on the PC: the see-through background let the page's text show through the items */
 html.is-desktop .track-context-menu { background: var(--md-sys-color-surface-container-highest-solid, #26262e); backdrop-filter: none; }

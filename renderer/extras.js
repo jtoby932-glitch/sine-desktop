@@ -1156,6 +1156,8 @@
 
   // ---- what's new, and a notice when a new file is ready ----
   const WHATS_NEW = document.documentElement.classList.contains('is-desktop') ? [
+    'Fixed: dragging the sound sliders quickly while a song plays could crash Sine',
+    'The player bar visualizer is back, behind the controls on the right, clear of the progress bar',
     'Song menus are solid, so the page no longer shows through them',
     'Fixed: the visualizer no longer runs behind the progress bar',
     'If the page or graphics ever crash, Sine comes straight back and notes why in its log',

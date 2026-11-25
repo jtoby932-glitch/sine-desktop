@@ -140,6 +140,19 @@
     return removeAttr.call(this, name);
   };
 
+  // ---- Sine's player-bar visualizer: behind the right-hand controls, clear of the progress bar ----
+  document.addEventListener('DOMContentLoaded', () => {
+    const move = () => {
+      const c = document.getElementById('nf-cava-mini');
+      const right = document.querySelector('.playbar-right');
+      if (c && right && c.parentElement !== right) right.insertBefore(c, right.firstChild);
+      return !!(c && right);
+    };
+    if (move()) return;
+    const mo = new MutationObserver(() => { if (move()) mo.disconnect(); });
+    mo.observe(document.body, { childList: true, subtree: true });
+  });
+
   // ---- the player bar's "more" button: edit, download and share when there's no room for all three ----
   // (desktop.css shows it instead of them when the left side of the bar is narrow)
   document.addEventListener('DOMContentLoaded', () => {

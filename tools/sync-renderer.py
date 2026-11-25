@@ -114,6 +114,8 @@ edit('build-info.js', [(re.compile(r'"version": "[^"]*"'), f'"version": "{pc_ver
 edit('extras.js', [
     ("  const WHATS_NEW = [\n",
      "  const WHATS_NEW = document.documentElement.classList.contains('is-desktop') ? [\n"
+     "    'Fixed: dragging the sound sliders quickly while a song plays could crash Sine',\n"
+     "    'The player bar visualizer is back, behind the controls on the right, clear of the progress bar',\n"
      "    'Song menus are solid, so the page no longer shows through them',\n"
      "    'Fixed: the visualizer no longer runs behind the progress bar',\n"
      "    'If the page or graphics ever crash, Sine comes straight back and notes why in its log',\n"

@@ -27,6 +27,15 @@ module.exports = async function smokeTest({ app, win, serverPort, serverToken })
       const p = document.querySelector('.audio-panel[data-audio-panel="tempo"]');
       const ctl = [...p.querySelectorAll('input[type=range], button, input[type=checkbox]')].filter((e) => !/reset|save|delete|remove|export|import/i.test((e.textContent || '') + (e.title || '')));
       let n = 0;
+      // dragging: every slider swept back and forth with an input event every 8 ms
+      for (const e of p.querySelectorAll('input[type=range]')) {
+        if (!e.offsetParent) continue;
+        e.scrollIntoView({ block: 'center' });
+        const min = +e.min || 0, max = +e.max || 100;
+        for (let i = 0; i < 90; i++) { e.value = String(min + (max - min) * (0.5 + 0.48 * Math.sin(i / 4))); e.dispatchEvent(new Event('input', { bubbles: true })); await new Promise((ok) => setTimeout(ok, 8)); }
+        e.dispatchEvent(new Event('change', { bubbles: true }));
+        n++;
+      }
       for (const e of ctl) {
         const b = e.getBoundingClientRect(); e.scrollIntoView({ block: 'center' });
         if (!e.offsetParent) continue;
